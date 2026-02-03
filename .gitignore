@@ -1,0 +1,32 @@
+# Environment variable files
+.env
+.env.*
+
+# Virtual environment directories
+venv/
+.venv/
+env/
+ENV/
+
+# Ignore any "final_artifacts" subfolder anywhere in the repo
+**/final_artifacts/
+
+# Ignore common media and markdown files inside any final_artifacts folder
+**/final_artifacts/**/*.jpg
+**/final_artifacts/**/*.webm
+**/final_artifacts/**/*.mp4
+**/final_artifacts/**/*.md
+
+# Python cache and build artifacts
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Distribution / packaging
+build/
+dist/
+*.egg-info/
+
+# OS files
+.DS_Store
+Thumbs.db
