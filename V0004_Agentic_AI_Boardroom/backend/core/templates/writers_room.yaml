@@ -1,0 +1,56 @@
+id: writers_room
+title: "Writer's Room"
+description: "A collaborative multi-agent room for brainstorming, outlining, and drafting high-quality scripts."
+template_type: "debate_to_write" # Enables the dynamic graph builder to know which base logic to apply
+
+personas:
+  - id: director
+    role: "Orchestrator"
+    display_name: "Director"
+    tools: ["assign_tasks", "trigger_review_break", "synthesize_json_prototype"]
+    description: "The central orchestrator who manages the conversation, keeps other agents on topic, and ensures the final output aligns with stylistic guidelines."
+  
+  - id: tech_sme
+    role: "Tech SME / Researcher"
+    display_name: "Tech SME"
+    tools: ["query_api_docs", "execute_python_sandbox", "verify_facts"]
+    description: "Responsible for pulling in factual, technical data and ensuring the content is accurate and credible."
+  
+  - id: writer
+    role: "Creative Copywriter"
+    display_name: "Lead Writer"
+    tools: ["stream_draft_tokens", "revise_narrative"]
+    description: "Generates the actual narrative, dialogue, and focuses heavily on structuring a strong hook."
+  
+  - id: critic
+    role: "Devil's Advocate"
+    display_name: "The Critic"
+    tools: ["analyze_pacing", "detect_plot_holes", "publish_comment_card"]
+    description: "An agent explicitly prompted to find plot holes, logical gaps, or pacing issues in the script drafted by the Copywriter."
+
+stages:
+  - id: requirements
+    name: "Requirements Gathering"
+    description: "Agents silently process the user's initial request in their private scratchpads. Agents generate internal to-do lists but do not output to the shared chat."
+    lead_agent: "director"
+    ui_layout: "chat_only"
+
+  - id: clarification
+    name: "Clarification Phase"
+    description: "Queries from all agents are consolidated by the Director. The Director asks the user a single, unified query for clarification."
+    lead_agent: "director"
+    ui_layout: "chat_only"
+
+  - id: roundtable_review
+    name: "The Roundtable Review"
+    description: "Agents openly debate the approach based on clarifications. The Director is the lead, has the authority to steer the debate, and must conclude by synthesizing the group's consensus into a prototype."
+    lead_agent: "director"
+    ui_layout: "split_screen_prototype"
+    stage_tools: ["synthesize_json_prototype"] # Only available during this stage
+
+  - id: drafting
+    name: "Scriptwriting Session"
+    description: "The Writer drafts the text. The Critic reviews and publishes comment cards. The Director and Tech SME observe and only interject if a review break is triggered."
+    lead_agent: "writer"
+    ui_layout: "scriptwriting_canvas"
+    stage_tools: ["trigger_review_break", "publish_comment_card"]

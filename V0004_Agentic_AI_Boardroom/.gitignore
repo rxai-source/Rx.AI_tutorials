@@ -1,0 +1,32 @@
+# .gitignore — AI Boardroom root
+
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.env
+*.egg-info/
+dist/
+build/
+.venv/
+venv/
+env/
+
+# Node / Frontend
+node_modules/
+frontend/dist/
+frontend/.env
+
+# IDE
+.vscode/
+.idea/
+*.swp
+
+# Testing
+.pytest_cache/
+.coverage
+htmlcov/
+
+# LangGraph checkpoints
+*.db
+*.sqlite
