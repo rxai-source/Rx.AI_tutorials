@@ -163,7 +163,15 @@ V0005_Extensible_AI_Boardroom/
 
 * [x] Replace hardcoded Director/Writer with a generic `DynamicAgent` class that absorbs a persona from the config.
 
-* [ ] Finalize the user journey for the writers' room flow - what is the steps happening in each stage, and what are the parameters which decide the completion of the stage, and what is the conversation, etc within each step of each stage. 
+* [x] Finalize the user journey for the writers' room flow - what is the steps happening in each stage, and what are the parameters which decide the completion of the stage, and what is the conversation, etc within each step of each stage. 
+
+* [x] Add the activities for the tech_SME RAG pipeline & also feature list based on free members and paid members.
+
+* [ ] Update the base agent so that it includes the characteristic parameters of different agents.
+
+* [ ] Create all the agents using the role, system prompt for Director, Tech SME, Writer, Critic. 
+
+* [ ] Finalize the format of the JSON story prototype.
 
 * [ ] Implement the silent `Orchestrator` agent to handle routing and turn-taking.
 
@@ -195,6 +203,13 @@ V0005_Extensible_AI_Boardroom/
 * [ ] Replace stub user store with PostgreSQL/NeonDB.
 * [ ] Docker Compose (backend + frontend) & CI/CD pipeline.
 
+### 🔲 Phase 5 — Go-To-Market & Business Operations (H2 2026)
+
+* [ ] **Legal Registration:** Register as a Sole Proprietorship via the Udyam portal (MSME) to establish a formal entity quickly without overhead.
+* [ ] **Financial Setup:** Open a business Current Account to strictly separate SaaS and YouTube revenue from your primary 35 LPA salary. Also decide a suitable price point for SaaS products suite based on deep research. Basic pricing_strategy.md is ready.
+* [ ] **Payments & Compliance:** Complete GST registration (necessary for international software service export) and finalize Stripe/Razorpay merchant approval.
+* [ ] **Sponsorship Outreach:** Create a 1-page channel Media Kit and execute cold email pitches to target AI developer tools (e.g., Pinecone, LangChain) to secure the 3 video sponsorships.
+* [ ] **Launch Wedge Execution:** Draft distribution posts and map out the release schedule for developer communities, including Hacker News, Reddit (r/LocalLLaMA, r/SideProject), and X/Twitter.
 ---
 
 ## Key Design Decisions
@@ -214,4 +229,11 @@ V0005_Extensible_AI_Boardroom/
 
 ## FAQs
 
-1. Explain all the key python scripts - what are they for, what they do, etc.
+1. Explain the need of the Silent Orchestrator
+
+Ans. In a robust multi-agent architecture (like LangGraph or AutoGen), there is a crucial distinction between the **Director** and the **Silent Orchestrator**:
+
+* **The Director (Persona):** An LLM-driven agent that acts as the "creative lead." It talks to the user, gives natural language commands to other agents, and synthesizes the narrative.
+* **The Silent Orchestrator (System/Graph Router):** The code-driven backend state machine (your `dynamic_graph_builder.py`). It does not generate creative text. Instead, it parses the YAML, builds the graph, decides *whose turn it is to speak*, manages the shared memory, and handles the actual tool execution.
+
+If you drop the Silent Orchestrator, your agents will talk over each other in an infinite loop.
