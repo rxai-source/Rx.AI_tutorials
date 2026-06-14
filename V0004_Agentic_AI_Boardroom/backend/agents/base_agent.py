@@ -11,7 +11,7 @@ Extends the codebase's Agent template with:
 
 from __future__ import annotations
 
-from typing import Any, Optional, Type
+from typing import Any, Optional, Type, Dict
 from langchain_core.messages import SystemMessage, HumanMessage, AIMessage
 
 from llms.base import BaseLLM
@@ -35,11 +35,15 @@ class BaseAgent:
         persona: str,
         llm: BaseLLM,
         system_prompt: str,
+        max_argument_quota: int = 3,
+        synthesize_json_template: Optional[Dict[str, Any]] = None,
     ):
         self.name = name
         self.persona = persona
         self.llm = llm
         self.system_prompt = system_prompt
+        self.max_argument_quota = max_argument_quota
+        self.synthesize_json_template = synthesize_json_template
 
         # ------------------------------------------------------------------ #
         # PRIVATE SCRATCHPAD — isolation boundary                             #

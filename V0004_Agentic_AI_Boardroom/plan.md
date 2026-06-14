@@ -167,9 +167,13 @@ V0005_Extensible_AI_Boardroom/
 
 * [x] Add the activities for the tech_SME RAG pipeline & also feature list based on free members and paid members.
 
-* [ ] Update the base agent so that it includes the characteristic parameters of different agents.
+* [x] Update the base agent so that it includes the characteristic parameters of different agents.
 
-* [ ] Create all the agents using the role, system prompt for Director, Tech SME, Writer, Critic. 
+* [x] Understand what exactly is happening in Agents currently and what will be the process of creating a new template room as well as how to create new agents ? What will be the process to create the Director, Tech SME, Writer, Critic?
+
+* [ ] Understand and run test_dynamic_agent.py annd create the environment, etc to make sure we are able to get this running successfully for a dummy testcase.
+
+* [ ] Create all the agents using the role, system prompt for Director, Tech SME, Writer, Critic. Make sure the invoke method is implemented properly with the user prompt as per chat : https://gemini.google.com/share/811172d56741.
 
 * [ ] Finalize the format of the JSON story prototype.
 
@@ -194,7 +198,7 @@ V0005_Extensible_AI_Boardroom/
 
 * [ ] Develop domain-specific widgets (e.g., "Deal Tracker" for Shark Tank, "Review Sidebar" for Writer's Room).
 
-
+* [ ] Prepare the Youtube Videos 1-3
 
 ### 🔲 Phase 4 — Testing & Production Hardening
 
@@ -205,10 +209,15 @@ V0005_Extensible_AI_Boardroom/
 
 ### 🔲 Phase 5 — Go-To-Market & Business Operations (H2 2026)
 
+* [ ] Prepare the Youtube Videos 4-6
+
 * [ ] **Legal Registration:** Register as a Sole Proprietorship via the Udyam portal (MSME) to establish a formal entity quickly without overhead.
 * [ ] **Financial Setup:** Open a business Current Account to strictly separate SaaS and YouTube revenue from your primary 35 LPA salary. Also decide a suitable price point for SaaS products suite based on deep research. Basic pricing_strategy.md is ready.
 * [ ] **Payments & Compliance:** Complete GST registration (necessary for international software service export) and finalize Stripe/Razorpay merchant approval.
 * [ ] **Sponsorship Outreach:** Create a 1-page channel Media Kit and execute cold email pitches to target AI developer tools (e.g., Pinecone, LangChain) to secure the 3 video sponsorships.
+
+* [ ] Release the Youtube Videos 7-10.
+
 * [ ] **Launch Wedge Execution:** Draft distribution posts and map out the release schedule for developer communities, including Hacker News, Reddit (r/LocalLLaMA, r/SideProject), and X/Twitter.
 ---
 
@@ -229,7 +238,7 @@ V0005_Extensible_AI_Boardroom/
 
 ## FAQs
 
-1. Explain the need of the Silent Orchestrator
+### 1. Explain the need of the Silent Orchestrator
 
 Ans. In a robust multi-agent architecture (like LangGraph or AutoGen), there is a crucial distinction between the **Director** and the **Silent Orchestrator**:
 
@@ -237,3 +246,103 @@ Ans. In a robust multi-agent architecture (like LangGraph or AutoGen), there is 
 * **The Silent Orchestrator (System/Graph Router):** The code-driven backend state machine (your `dynamic_graph_builder.py`). It does not generate creative text. Instead, it parses the YAML, builds the graph, decides *whose turn it is to speak*, manages the shared memory, and handles the actual tool execution.
 
 If you drop the Silent Orchestrator, your agents will talk over each other in an infinite loop.
+
+
+### 2. Explain what is happening in the agent files. How is BaseAgent different from DynamicAgent? 
+
+Ans. The agent system is divided into two primary parts: the core structural class and the configuration-driven wrapper.
+
+*   **[BaseAgent]** : Acts as the foundation. It includes the following key things:
+    *   Location: backend\agents\base_agent.py
+    *   Initialized using parameters: `name`, `persona`, `llm`, `system_prompt`, `max_argument_quota`, `synthesize_json_template`.
+    *   **Memory Isolation Boundary**: A private `_scratchpad` list that holds intermediate chain-of-thought reasoning via `think()`. This is kept isolated. Calling public methods like `respond()` or `respond_structured()` wipes this scratchpad internally before returning a final output.
+    *   It has 3 helper methods related to the _scratchpad - `_scratch_append`, `_scratch_clear`, `get_scratchpad_snapshot`.
+    *   The core  methods are: `think()`, `respond()`, `respond_structured()`, `run()`.
+
+*   **[DynamicAgent]: A subclass of `BaseAgent`. It removes hardcoded code paths by absorbing a configuration model `Persona` at runtime.
+    *   It dynamically constructs the LLM system prompt:
+        ```python
+        system_prompt = (
+            f"You are {persona_config.display_name or persona_config.id}.\n"
+            f"Your Role: {persona_config.role}\n"
+            f"Description: {persona_config.description}\n\n"
+            f"Follow all instructions and stay in character. Provide structured and concise outputs."
+        )
+        ```
+    *   It runs a two-step node execution flow `execute()` where it silently plans/reasons in the `_scratchpad` and then outputs a clean public response to update `DynamicRoomState`.
+
+### 3. What is the connection between the YAML configuration and the Agents?
+The connection is established via the loader pipeline:
+
+```mermaid
+graph TD
+    YAML[writers_room.yaml] -- Loaded by loader.py --> Pydantic[Persona Model]
+    Pydantic -- Fed into DynamicAgent.__init__ --> ClassInstance[DynamicAgent Instance]
+    ClassInstance -- Inherits core methods --> ParentClass[BaseAgent]
+```
+
+1.  **Define Configuration**: [writers_room.yaml](file: backend/core/templates/writers_room.yaml) contains raw persona text blocks defining tools, names, descriptions, quotas, and template schemas.
+2.  **Parse and Validate**: [loader.py](file: backend/core/templates/loader.py) uses Pydantic to validate and load this file into structured models like `Persona`.
+3.  **Instantiate**: The code maps the active graph nodes using the `Persona` configuration objects and initializes [DynamicAgent](file: backend/agents/dynamic_agent.py) instances.
+
+---
+
+### 3. How is a `BaseAgent` different from a `DynamicAgent`?
+*   **[BaseAgent](file:///c:/Users/ABC/Projects/A0011_RxAI_YT_Videos/V0004_Agentic_AI_Boardroom/backend/agents/base_agent.py)** defines the **functional blueprint** (interacting with LLMs, managing internal memory, clearing scratchpads, formatting system messages). It is generic and does not care about your specific domain or template.
+*   **[DynamicAgent](file:///c:/Users/ABC/Projects/A0011_RxAI_YT_Videos/V0004_Agentic_AI_Boardroom/backend/agents/dynamic_agent.py)** acts as the **runtime wrapper** that maps configuration values (such as `max_argument_quota` or `synthesize_json_template`) into system prompts, tools, and actions for specific use cases (e.g. Writer's Room, Shark Tank).
+
+### 4. What are the steps to create a new agent?
+To add a brand new agent type (for example, a "Marketing Specialist"):
+
+1.  **Define in Template**: Add the new persona to the `personas:` list in your room YAML template:
+    ```yaml
+    - id: marketer
+      role: "Campaign Strategist"
+      display_name: "Lead Marketer"
+      tools: ["analyze_market", "draft_copy"]
+      description: "Optimizes messaging structure."
+      max_argument_quota: 3
+    ```
+2.  **Load and Initialize**:
+    ```python
+    from core.templates.loader import load_template
+    from agents.dynamic_agent import DynamicAgent
+    from llms.registry import get_llm
+
+    template = load_template("core/templates/writers_room.yaml")
+    marketer_config = next(p for p in template.personas if p.id == "marketer")
+    llm = get_llm("gemini")
+    
+    marketer_agent = DynamicAgent(persona_config=marketer_config, llm=llm)
+    ```
+
+---
+
+### 5. What are the steps needed to instantiate the Director, Tech SME, Writer, and Critic?
+Rather than writing four distinct Python files, you load their respective block parameters dynamically:
+
+1.  **Parse the Room Config**:
+    ```python
+    template = load_template("backend/core/templates/writers_room.yaml")
+    llm = get_llm("gemini")
+    ```
+2.  **Instantiate Director**:
+    ```python
+    director_config = next(p for p in template.personas if p.id == "director")
+    director = DynamicAgent(persona_config=director_config, llm=llm)
+    ```
+3.  **Instantiate Tech SME**:
+    ```python
+    sme_config = next(p for p in template.personas if p.id == "tech_sme")
+    tech_sme = DynamicAgent(persona_config=sme_config, llm=llm)
+    ```
+4.  **Instantiate Writer**:
+    ```python
+    writer_config = next(p for p in template.personas if p.id == "writer")
+    writer = DynamicAgent(persona_config=writer_config, llm=llm)
+    ```
+5.  **Instantiate Critic**:
+    ```python
+    critic_config = next(p for p in template.personas if p.id == "critic")
+    critic = DynamicAgent(persona_config=critic_config, llm=llm)
+    ```

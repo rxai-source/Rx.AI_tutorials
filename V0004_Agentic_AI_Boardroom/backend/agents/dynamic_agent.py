@@ -40,6 +40,8 @@ class DynamicAgent(BaseAgent):
             persona=persona_config.role,
             llm=llm,
             system_prompt=system_prompt,
+            max_argument_quota=persona_config.max_argument_quota if persona_config.max_argument_quota is not None else 3,
+            synthesize_json_template=persona_config.synthesize_json_template,
         )
 
         # Placeholder for Tool Registry integration

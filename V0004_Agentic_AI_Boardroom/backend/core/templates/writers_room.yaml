@@ -9,24 +9,42 @@ personas:
     display_name: "Director"
     tools: ["assign_tasks", "trigger_review_break", "synthesize_json_prototype"]
     description: "The central orchestrator who manages the conversation, keeps other agents on topic, and ensures the final output aligns with stylistic guidelines."
-  
+    max_argument_quota: 10
+    synthesize_json_template:
+      title: "Story Title"
+      characters:
+        - name: "Character Name"
+          role: "Character Role in mystery"
+          description: "Visual or behavioral description"
+      setting:
+        location: "Setting Location"
+        time_period: "Time setting"
+        description: "Atmosphere description"
+      puzzle_beats:
+        - beat_number: 1
+          clue: "Clue discovered"
+          explanation: "What the clue means relative to the AI concept"
+
   - id: tech_sme
     role: "Tech SME / Researcher"
     display_name: "Tech SME"
     tools: ["query_api_docs", "execute_python_sandbox", "verify_facts"]
     description: "Responsible for pulling in factual, technical data and ensuring the content is accurate and credible."
-  
+    max_argument_quota: 3
+
   - id: writer
     role: "Creative Copywriter"
     display_name: "Lead Writer"
     tools: ["stream_draft_tokens", "revise_narrative"]
     description: "Generates the actual narrative, dialogue, and focuses heavily on structuring a strong hook."
-  
+    max_argument_quota: 3
+
   - id: critic
     role: "Devil's Advocate"
     display_name: "The Critic"
     tools: ["analyze_pacing", "detect_plot_holes", "publish_comment_card"]
     description: "An agent explicitly prompted to find plot holes, logical gaps, or pacing issues in the script drafted by the Copywriter."
+    max_argument_quota: 4
 
 stages:
   - id: requirements

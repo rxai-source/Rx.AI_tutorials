@@ -1,6 +1,6 @@
 from __future__ import annotations
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import json
 
 try:
@@ -18,6 +18,8 @@ class Persona(BaseModel):
     role: str
     tools: Optional[List[str]] = []
     description: Optional[str] = None
+    max_argument_quota: Optional[int] = 3
+    synthesize_json_template: Optional[Dict[str, Any]] = None
 
 
 class RoomStage(BaseModel):
