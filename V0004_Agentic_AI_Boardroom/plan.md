@@ -171,11 +171,17 @@ V0005_Extensible_AI_Boardroom/
 
 * [x] Understand what exactly is happening in Agents currently and what will be the process of creating a new template room as well as how to create new agents ? What will be the process to create the Director, Tech SME, Writer, Critic?
 
-* [ ] Understand and run test_dynamic_agent.py annd create the environment, etc to make sure we are able to get this running successfully for a dummy testcase.
+* [x] Explain to me what we are doing in test_dynamic_agent.py : Do create the Director agent in test_dynamic_agent.py, and also test out the different methods for the director agent. and run test_dynamic_agent.py annd create the environment, etc to make sure we are able to get this running successfully for a dummy testcase.
 
-* [ ] Create all the agents using the role, system prompt for Director, Tech SME, Writer, Critic. Make sure the invoke method is implemented properly with the user prompt as per chat : https://gemini.google.com/share/811172d56741.
+* [ ] Develop a minimalistic FastAPI mock server that returns hardcoded JSON responses and simulates a basic WebSocket text stream.
+
+* [ ] Connect the dummy Flutter application to the mock backend to validate the UI layout shifts, state management, and streaming text rendering.
+
+* [ ] Finalize the JSON schemas for the API contract based on the mock integration learnings.
 
 * [ ] Finalize the format of the JSON story prototype.
+
+* [ ] Create all the agents using the role, system prompt for Director, Tech SME, Writer, Critic. Make sure the invoke method is implemented properly with the user prompt as per chat : https://gemini.google.com/share/811172d56741.
 
 * [ ] Implement the silent `Orchestrator` agent to handle routing and turn-taking.
 
@@ -189,14 +195,23 @@ V0005_Extensible_AI_Boardroom/
 * [ ] Do the backend testing for the end-to-end `writers_room` flow for 5 different test scenarios.
 
 ### 🔲 Phase 3 — Componentized Frontend UI
+* [x] Finalize the Frontend UI Tech stack for a mobile application - Android or IOS deployment - I prefer Flutter personally but ok to proceed with what will be best in terms of user experience.
+* [x] Create the UI pages for the mobile application, and make sure they are user friendly and easy to navigate. Refer to user_journeys_0001_writers_room.md to make sure we are giving a great user experience.
+* [x] Freeze the front-end framework to **Flutter (Dart)** and map how the desktop-style prototype translates to a mobile viewport (Completed: see [mobile_layout_mapping.md](file:///c:/Users/ABC/Projects/A0011_RxAI_YT_Videos/V0004_Agentic_AI_Boardroom/docs/mobile_layout_mapping.md)).
+* [x] Create the mobile layout HTML mockup similar to the ui_prototype.html (Completed: see [ui_prototype_mobile_app.html](file:///c:/Users/ABC/Projects/A0011_RxAI_YT_Videos/V0004_Agentic_AI_Boardroom/frontend/ui_prototype_mobile_app.html))
 
-* [ ] Setup Zustand store to interpret UI Layout frames pushed by the FastAPI backend.
+* [ ] Scaffold the base Flutter project and build the static UI structure (Layouts, Tabs, and Navigation) based on the mobile mockup (NOTE: Plan out this activity based on the html and also give detailed instructions with Gemini's help when scaffolding the flutter project so that it doesnt miss some basic things in the UI)
 
-
-* [ ] Build pluggable layout containers that mount/unmount seamlessly without interrupting the WebSocket token stream.
-
-
-* [ ] Develop domain-specific widgets (e.g., "Deal Tracker" for Shark Tank, "Review Sidebar" for Writer's Room).
+* [ ] Setup Riverpod state management (using `StateNotifierProvider` or `Notifier` + Streams) to interpret UI Layout frames (`LayoutFrame`) and active stage context pushed by the FastAPI backend.
+* [ ] Audit the Flutter UI for all user-interactive controls (Buttons, Text Inputs, Sliders) and document the required API/WebSocket endpoints they will trigger.
+* [ ] Develop the individual pluggable UI Widgets (Chat Widget, Clarification Prompt, Story Prototype Viewer, Streaming Canvas, Critic Cards) as stateless, hardcoded components.
+* [ ] Build dynamic layout screens in Flutter using `AnimatedSwitcher` to transition between layouts (`chatOnly`, `splitScreenPrototype`, `scriptwritingCanvas`) seamlessly without interrupting the WebSocket stream.
+* [ ] Develop an interactive `ChatWidget` in Flutter for requirements gathering, user prompts, and agent dialogue feeds.
+* [ ] Develop a `ClarificationPromptWidget` in Flutter to display the Director's unified queries and accept user responses.
+* [ ] Develop a `StoryPrototypeViewer` widget in Flutter to dynamically render JSON story outlines (title, characters, setting, and puzzle beats).
+* [ ] Develop a `StreamingDraftCanvas` widget in Flutter with a streaming visual cursor to render the Writer's draft text token-by-token.
+* [ ] Develop a `CriticCommentCards` widget in Flutter (integrated via dynamic Bottom Sheet or Sliding Drawer) allowing users to view critique notes and interact with them (e.g., Accept, Reject, or Discuss).
+* [ ] Develop a `StageProgressBar` / Control Panel widget in Flutter to visualize the current state of boardroom graph execution.
 
 * [ ] Prepare the Youtube Videos 1-3
 

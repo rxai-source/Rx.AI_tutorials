@@ -81,3 +81,94 @@ async def test_dynamic_agent_scratchpad_isolation():
 
     # Execution should clean up scratchpad internally via respond()
     assert len(agent.get_scratchpad_snapshot()) == 0
+
+
+@pytest.mark.asyncio
+async def test_director_agent_methods():
+    """Verify all methods for the Director persona loaded from writers_room.yaml."""
+    from core.templates.loader import load_template
+    import os
+
+    template_path = os.path.join("backend", "core", "templates", "writers_room.yaml")
+    template = load_template(template_path)
+    director_config = next(p for p in template.personas if p.id == "director")
+
+    print("\n[DEBUG] --- DIRECTOR PERSONA INITIALIZATION ---")
+    print(f"[DEBUG] Display Name: {director_config.display_name}")
+    print(f"[DEBUG] Role: {director_config.role}")
+    print(f"[DEBUG] Description: {director_config.description}")
+    print(f"[DEBUG] Tools: {director_config.tools}")
+    print(f"[DEBUG] Max Argument Quota: {director_config.max_argument_quota}")
+    print(f"[DEBUG] JSON Synthesis Template: {director_config.synthesize_json_template}")
+
+    llm = MockLLM()
+    director_agent = DynamicAgent(persona_config=director_config, llm=llm)
+
+    print("\n[DEBUG] --- SYSTEM PROMPT ---")
+    print(director_agent.system_prompt)
+
+    # 1. Test configuration absorption
+    assert director_agent.name == "director"
+    assert director_agent.persona == "Orchestrator"
+    assert director_agent.max_argument_quota == 10
+    assert "You are Director." in director_agent.system_prompt
+    assert "Your Role: Orchestrator" in director_agent.system_prompt
+    assert "tools" in dir(director_agent)
+
+    # 2. Test think() method (private reasoning)
+    print("\n[DEBUG] --- TESTING think() ---")
+    reasoning = await director_agent.think("Develop an outline for Sherlock Holmes AI story.")
+    print(f"[DEBUG] Private Reasoning Output: {reasoning}")
+    scratchpad = director_agent.get_scratchpad_snapshot()
+    print(f"[DEBUG] Scratchpad Snapshot: {scratchpad}")
+    assert len(scratchpad) == 1
+    assert scratchpad[0]["role"] == "reasoning"
+    assert scratchpad[0]["content"] == "mock final response"
+    assert scratchpad[0]["agent"] == "director"
+
+    # 3. Test respond() method (public final text response)
+    print("\n[DEBUG] --- TESTING respond() ---")
+    response = await director_agent.respond("Finalize script outline.")
+    print(f"[DEBUG] Public Response: {response}")
+    scratchpad_after = director_agent.get_scratchpad_snapshot()
+    print(f"[DEBUG] Scratchpad After respond(): {scratchpad_after}")
+    assert response == "mock final response"
+    assert len(scratchpad_after) == 0
+
+    # 4. Test respond_structured() method (JSON/Schema response)
+    print("\n[DEBUG] --- TESTING respond_structured() ---")
+    # Repopulate scratchpad to verify it gets cleared
+    await director_agent.think("Some intermediate thoughts.")
+    assert len(director_agent.get_scratchpad_snapshot()) == 1
+
+    from pydantic import BaseModel
+    class DummySchema(BaseModel):
+        mock_key: str
+
+    structured_response = await director_agent.respond_structured("Format output in schema.", DummySchema)
+    print(f"[DEBUG] Structured Response: {structured_response}")
+    scratchpad_after_structured = director_agent.get_scratchpad_snapshot()
+    print(f"[DEBUG] Scratchpad After respond_structured(): {scratchpad_after_structured}")
+    assert structured_response == {"mock_key": "mock_value"}
+    assert len(scratchpad_after_structured) == 0
+
+    # 5. Test execute() method (dynamic stage node execution flow)
+    print("\n[DEBUG] --- TESTING execute() ---")
+    from graph.state import DynamicRoomState
+    state: DynamicRoomState = {
+        "user_request": "Sherlock Holmes AI Story",
+        "messages": [],
+        "current_stage": "roundtable_review",
+        "status": "active",
+        "error": None,
+        "shared_data": {}
+    }
+
+    result = await director_agent.execute(state, "Writer's draft is ready for review.")
+    print(f"[DEBUG] Execute Result: {result}")
+    scratchpad_after_execute = director_agent.get_scratchpad_snapshot()
+    print(f"[DEBUG] Scratchpad After execute(): {scratchpad_after_execute}")
+    assert result["output"] == "mock final response"
+    assert result["agent"] == "director"
+    assert len(scratchpad_after_execute) == 0
+

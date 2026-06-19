@@ -1,0 +1,1998 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Rx.AI Boardroom Director Console - Mobile App</title>
+  <meta name="description"
+    content="Mobile-optimized UI prototype of the AI Boardroom Writers' Room stage layout transitions.">
+
+  <!-- Google Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Outfit:wght@400;500;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+    rel="stylesheet">
+
+  <style>
+    /* -------------------------------------------------------------
+       DESIGN SYSTEM & CSS VARIABLES (Matches Desktop theme exactly)
+       ------------------------------------------------------------- */
+    :root {
+      --bg-base: #0a0b0e;
+      --bg-surface: rgba(17, 22, 34, 0.85);
+      --bg-card: rgba(26, 32, 48, 0.75);
+      --bg-input: rgba(10, 11, 14, 0.9);
+      --border-color: rgba(255, 255, 255, 0.08);
+      --border-focus: rgba(99, 102, 241, 0.6);
+
+      --color-primary: #6366f1;
+      /* Indigo */
+      --color-primary-glow: rgba(99, 102, 241, 0.15);
+      --color-secondary: #a855f7;
+      /* Purple */
+      --color-success: #10b981;
+      /* Emerald */
+      --color-warning: #f59e0b;
+      /* Amber */
+      --color-error: #ef4444;
+      /* Red */
+
+      --text-main: #f3f4f6;
+      --text-muted: #9ca3af;
+      --text-dark: #6b7280;
+
+      --transition-smooth: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-fast: all 0.15s ease;
+      --border-radius-lg: 16px;
+      --border-radius-md: 10px;
+      --border-radius-sm: 6px;
+      --font-outfit: 'Outfit', sans-serif;
+      --font-inter: 'Inter', sans-serif;
+      --font-mono: 'Fira Code', monospace;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background-color: var(--bg-base);
+      color: var(--text-main);
+      font-family: var(--font-inter);
+      min-height: 100vh;
+      min-height: 100dvh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+      background-image:
+        radial-gradient(circle at 50% 10%, rgba(99, 102, 241, 0.12) 0%, transparent 60%),
+        radial-gradient(circle at 50% 90%, rgba(168, 85, 247, 0.08) 0%, transparent 50%);
+      background-attachment: fixed;
+    }
+
+    html {
+      height: 100%;
+    }
+
+    /* Scrollbars */
+    ::-webkit-scrollbar {
+      width: 4px;
+      height: 4px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: rgba(0, 0, 0, 0.1);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.1);
+      border-radius: 2px;
+    }
+
+    /* -------------------------------------------------------------
+       MOBILE SHELL STRUCTURE
+       ------------------------------------------------------------- */
+    .app-container {
+      display: flex;
+      flex-direction: column;
+      width: 100%;
+      height: 100vh;
+      height: 100dvh;
+      overflow: hidden;
+      position: relative;
+    }
+
+    /* Mobile Custom Header / App Bar */
+    .app-bar {
+      height: 56px;
+      background: rgba(17, 22, 34, 0.9);
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 16px;
+      z-index: 10;
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+    }
+
+    .menu-btn {
+      background: transparent;
+      border: none;
+      color: var(--text-main);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      transition: var(--transition-fast);
+    }
+
+    .menu-btn:active {
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .brand-logo {
+      width: 26px;
+      height: 26px;
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      border-radius: var(--border-radius-sm);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.4);
+    }
+
+    .brand-title {
+      font-family: var(--font-outfit);
+      font-weight: 700;
+      font-size: 1rem;
+      background: linear-gradient(to right, #ffffff, #d8b4fe);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    /* Top timeline Stepper for Mobile (Compacted) */
+    .timeline-bar {
+      height: 60px;
+      border-bottom: 1px solid var(--border-color);
+      background: rgba(10, 11, 14, 0.5);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 0 16px;
+      z-index: 5;
+    }
+
+    .timeline-steps {
+      display: flex;
+      align-items: center;
+      width: 100%;
+      max-width: 400px;
+      justify-content: space-between;
+      position: relative;
+    }
+
+    .timeline-line {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      right: 0;
+      height: 2px;
+      background: rgba(255, 255, 255, 0.06);
+      transform: translateY(-50%);
+      z-index: 1;
+    }
+
+    .timeline-line-fill {
+      position: absolute;
+      top: 50%;
+      left: 0;
+      width: 0%;
+      height: 2px;
+      background: linear-gradient(to right, var(--color-primary), var(--color-secondary));
+      transform: translateY(-50%);
+      z-index: 2;
+      transition: var(--transition-smooth);
+    }
+
+    .step-node {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: relative;
+      z-index: 3;
+      cursor: pointer;
+    }
+
+    .step-circle {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #111827;
+      border: 1.5px solid rgba(255, 255, 255, 0.15);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--text-muted);
+      transition: var(--transition-smooth);
+    }
+
+    .step-node.active .step-circle {
+      border-color: var(--color-primary);
+      background: var(--color-primary);
+      color: #ffffff;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.5);
+    }
+
+    .step-node.completed .step-circle {
+      border-color: var(--color-success);
+      background: var(--color-success);
+      color: #ffffff;
+    }
+
+    .step-label {
+      position: absolute;
+      top: 28px;
+      font-size: 0.55rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-dark);
+      white-space: nowrap;
+      transition: var(--transition-smooth);
+      display: none;
+      /* Hide all labels in mobile list default */
+    }
+
+    .step-node.active .step-label {
+      display: block;
+      /* Show only active label */
+      color: var(--color-primary);
+    }
+
+    .step-node.completed .step-label {
+      /* Show completed labels if active steps are highlighted, or keep clean */
+    }
+
+    /* -------------------------------------------------------------
+       WORKSPACE PANELS & LAYOUT SWITCHERS
+       ------------------------------------------------------------- */
+    .workspace {
+      flex-grow: 1;
+      overflow: hidden;
+      position: relative;
+      padding: 12px;
+    }
+
+    .layout-frame {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      opacity: 0;
+      transform: translateY(12px) scale(0.98);
+      pointer-events: none;
+      transition: opacity 0.3s cubic-bezier(0.4, 0, 0.2, 1), transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 1;
+    }
+
+    .layout-frame.active {
+      opacity: 1;
+      transform: translateY(0) scale(1);
+      pointer-events: all;
+      z-index: 4;
+    }
+
+    /* 1. Chat Only Layout */
+    .frame-chat-only {
+      height: calc(100% - 24px);
+    }
+
+    /* 2. Split Screen Frame translated to Tabs for Mobile */
+    .frame-split-screen {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-bar {
+      display: flex;
+      background: rgba(26, 32, 48, 0.5);
+      border-radius: var(--border-radius-md);
+      padding: 4px;
+      border: 1px solid var(--border-color);
+      margin-bottom: 8px;
+    }
+
+    .tab-btn {
+      flex: 1;
+      padding: 8px;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      font-family: var(--font-outfit);
+      font-weight: 600;
+      font-size: 0.8rem;
+      border-radius: var(--border-radius-sm);
+      cursor: pointer;
+      transition: var(--transition-smooth);
+      text-align: center;
+    }
+
+    .tab-btn.active {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #ffffff;
+      box-shadow: 0 2px 8px rgba(99, 102, 241, 0.2);
+    }
+
+    .tab-content {
+      flex-grow: 1;
+      position: relative;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .tab-panel {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      opacity: 0;
+      pointer-events: none;
+      transform: scale(0.98);
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+
+    .tab-panel.active {
+      opacity: 1;
+      pointer-events: all;
+      transform: scale(1);
+      position: relative;
+    }
+
+    /* 3. Scriptwriting Canvas (Stages 4) Layout Frame */
+    .frame-canvas {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+    }
+
+    /* -------------------------------------------------------------
+       WIDGET COMPONENT STYLES
+       ------------------------------------------------------------- */
+    .glass-panel {
+      background: var(--bg-surface);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      flex-grow: 1;
+      height: 100%;
+    }
+
+    .panel-header {
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.02);
+      flex-shrink: 0;
+    }
+
+    .panel-title {
+      font-family: var(--font-outfit);
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.5px;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .panel-header-badge {
+      font-family: var(--font-mono);
+      font-size: 0.65rem;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 2px 6px;
+      border-radius: var(--border-radius-sm);
+      color: var(--text-muted);
+      border: 1px solid var(--border-color);
+    }
+
+    .panel-content {
+      padding: 12px;
+      overflow-y: auto;
+      flex-grow: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    /* Chat Messages */
+    .chat-bubble {
+      display: flex;
+      flex-direction: column;
+      max-width: 85%;
+      padding: 10px 12px;
+      border-radius: var(--border-radius-lg);
+      font-size: 0.82rem;
+      line-height: 1.4;
+      animation: slideIn 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .bubble-user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--color-primary), #4f46e5);
+      border-bottom-right-radius: 4px;
+      color: #ffffff;
+    }
+
+    .bubble-agent {
+      align-self: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-top-left-radius: 4px;
+      color: var(--text-main);
+    }
+
+    .bubble-sender {
+      font-size: 0.7rem;
+      font-weight: 600;
+      margin-bottom: 2px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .bubble-sender.director {
+      color: #818cf8;
+    }
+
+    .bubble-sender.sme {
+      color: #34d399;
+    }
+
+    .bubble-sender.writer {
+      color: #c084fc;
+    }
+
+    .bubble-sender.critic {
+      color: #fbbf24;
+    }
+
+    .bubble-time {
+      font-size: 0.6rem;
+      color: rgba(255, 255, 255, 0.4);
+      margin-top: 4px;
+      align-self: flex-end;
+    }
+
+    .bubble-agent .bubble-time {
+      color: var(--text-dark);
+    }
+
+    /* Clarification Prompt Input Widget */
+    .clarification-prompt-box {
+      border: 1px solid var(--color-warning);
+      background: rgba(245, 158, 11, 0.08);
+      border-radius: var(--border-radius-lg);
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      margin-top: 8px;
+      animation: pulseBorder 2s infinite alternate;
+    }
+
+    .clarification-header {
+      font-weight: 600;
+      color: var(--color-warning);
+      font-size: 0.8rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .input-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chat-input {
+      flex-grow: 1;
+      background: var(--bg-input);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 8px 12px;
+      color: var(--text-main);
+      font-family: var(--font-inter);
+      font-size: 0.8rem;
+      outline: none;
+      transition: var(--transition-fast);
+    }
+
+    .chat-input:focus {
+      border-color: var(--border-focus);
+      box-shadow: 0 0 8px rgba(99, 102, 241, 0.25);
+    }
+
+    .btn-send {
+      width: 36px;
+      height: 36px;
+      border-radius: var(--border-radius-md);
+      background: var(--color-primary);
+      border: none;
+      color: #ffffff;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: var(--transition-fast);
+      flex-shrink: 0;
+    }
+
+    .btn-send:active {
+      background: #4f46e5;
+    }
+
+    /* Debate elements */
+    .debate-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .debate-card {
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .debate-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .debate-agent-role {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .debate-content {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+
+    /* Story Prototype Viewer */
+    .prototype-viewer {
+      background: #0f121d;
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-lg);
+      overflow-y: auto;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .json-code {
+      font-family: var(--font-mono);
+      font-size: 0.72rem;
+      color: #93c5fd;
+      background: #08090f;
+      padding: 12px;
+      border-radius: var(--border-radius-md);
+      overflow-x: auto;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      line-height: 1.4;
+    }
+
+    .prototype-visual-card {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .concept-tag {
+      background: rgba(99, 102, 241, 0.12);
+      color: #a5b4fc;
+      border: 1px solid rgba(99, 102, 241, 0.25);
+      border-radius: 12px;
+      padding: 2px 6px;
+      font-size: 0.65rem;
+      font-weight: 600;
+      display: inline-block;
+    }
+
+    .meta-box {
+      border-left: 2px solid var(--color-primary);
+      padding-left: 8px;
+      font-size: 0.78rem;
+    }
+
+    /* Streaming Draft Canvas Widget */
+    .draft-canvas {
+      flex-grow: 1;
+      background: #0d0f17;
+      border-radius: var(--border-radius-lg);
+      padding: 16px;
+      font-size: 0.88rem;
+      line-height: 1.6;
+      overflow-y: auto;
+      color: #e5e7eb;
+      position: relative;
+      height: 100%;
+    }
+
+    .draft-stream {
+      position: relative;
+      padding-bottom: 60px;
+      /* Space for FAB */
+    }
+
+    .streaming-cursor {
+      display: inline-block;
+      width: 2px;
+      height: 1rem;
+      background-color: var(--color-success);
+      margin-left: 2px;
+      animation: blink 0.8s infinite;
+      vertical-align: middle;
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE-UP CRITIC BOTTOM SHEET
+       ------------------------------------------------------------- */
+    .critic-sheet-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: 50;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+    }
+
+    .critic-sheet-backdrop.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .critic-bottom-sheet {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      height: 50%;
+      background: var(--bg-surface);
+      border-top: 1px solid var(--border-color);
+      border-top-left-radius: var(--border-radius-lg);
+      border-top-right-radius: var(--border-radius-lg);
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+      transform: translateY(100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.5);
+    }
+
+    .critic-bottom-sheet.open {
+      transform: translateY(0);
+    }
+
+    .sheet-handle-bar {
+      width: 100%;
+      height: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+    }
+
+    .sheet-handle {
+      width: 36px;
+      height: 4px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 2px;
+    }
+
+    .sheet-header {
+      padding: 0 16px 10px 16px;
+      border-bottom: 1px solid var(--border-color);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .sheet-title {
+      font-family: var(--font-outfit);
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-main);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .sheet-close-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: none;
+      color: var(--text-muted);
+      border-radius: 50%;
+      width: 24px;
+      height: 24px;
+      font-size: 0.65rem;
+      cursor: pointer;
+    }
+
+    .sheet-content {
+      padding: 16px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      flex-grow: 1;
+    }
+
+    .comment-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      animation: slideIn 0.35s ease;
+    }
+
+    .comment-card.active-card {
+      border-color: var(--color-warning);
+      box-shadow: 0 2px 10px rgba(245, 158, 11, 0.1);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .critic-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      color: var(--color-warning);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .card-body {
+      font-size: 0.78rem;
+      line-height: 1.4;
+      color: var(--text-muted);
+    }
+
+    .card-actions {
+      display: flex;
+      gap: 6px;
+      margin-top: 2px;
+    }
+
+    .btn-action {
+      padding: 5px 10px;
+      font-size: 0.68rem;
+      border-radius: var(--border-radius-sm);
+      cursor: pointer;
+      font-weight: 600;
+      border: 1px solid var(--border-color);
+      background: rgba(255, 255, 255, 0.03);
+      color: var(--text-main);
+      transition: var(--transition-fast);
+    }
+
+    .btn-action.btn-accept {
+      background: rgba(16, 185, 129, 0.1);
+      border-color: rgba(16, 185, 129, 0.3);
+      color: #34d399;
+    }
+
+    .btn-action.btn-accept:active {
+      background: var(--color-success);
+      color: #ffffff;
+    }
+
+    .btn-action.btn-reject {
+      background: rgba(239, 68, 68, 0.1);
+      border-color: rgba(239, 68, 68, 0.3);
+      color: #f87171;
+    }
+
+    .btn-action.btn-reject:active {
+      background: var(--color-error);
+      color: #ffffff;
+    }
+
+    .btn-action.btn-discuss {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.1);
+    }
+
+    .card-resolution {
+      font-size: 0.68rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 0;
+      display: none;
+    }
+
+    .res-accepted {
+      color: var(--color-success);
+    }
+
+    .res-rejected {
+      color: var(--color-error);
+    }
+
+    /* Floating action button for Critic triggers */
+    .floating-critic-btn {
+      position: absolute;
+      bottom: 16px;
+      right: 16px;
+      background: linear-gradient(135deg, var(--color-warning), #d97706);
+      border: none;
+      color: #ffffff;
+      border-radius: 30px;
+      padding: 10px 16px;
+      font-family: var(--font-outfit);
+      font-weight: 600;
+      font-size: 0.78rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      cursor: pointer;
+      box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+      z-index: 40;
+      animation: floatPulse 2s infinite alternate;
+      display: none;
+    }
+
+    @keyframes floatPulse {
+      from {
+        transform: translateY(0) scale(1);
+        box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+      }
+
+      to {
+        transform: translateY(-4px) scale(1.02);
+        box-shadow: 0 8px 16px rgba(245, 158, 11, 0.55);
+      }
+    }
+
+    /* -------------------------------------------------------------
+       SLIDE-IN OVERLAY NAVIGATION DRAWER
+       ------------------------------------------------------------- */
+    .drawer-backdrop {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.65);
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      backdrop-filter: blur(2px);
+    }
+
+    .drawer-backdrop.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .mobile-drawer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      bottom: 0;
+      width: 280px;
+      background: var(--bg-surface);
+      border-right: 1px solid var(--border-color);
+      z-index: 1001;
+      display: flex;
+      flex-direction: column;
+      padding: 20px;
+      transform: translateX(-100%);
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+    }
+
+    .mobile-drawer.open {
+      transform: translateX(0);
+    }
+
+    .drawer-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .section-title {
+      font-family: var(--font-outfit);
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      color: var(--text-dark);
+      margin-bottom: 8px;
+      margin-top: 18px;
+      font-weight: 600;
+    }
+
+    .metadata-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+      padding: 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      font-size: 0.75rem;
+    }
+
+    .meta-row {
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .meta-label {
+      color: var(--text-muted);
+    }
+
+    .meta-val {
+      font-family: var(--font-mono);
+      color: var(--text-main);
+      font-weight: 500;
+    }
+
+    .roster-list {
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .agent-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 8px 10px;
+      background: rgba(255, 255, 255, 0.02);
+      border: 1px solid var(--border-color);
+      border-radius: var(--border-radius-md);
+    }
+
+    .agent-info {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .agent-avatar {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 600;
+    }
+
+    .agent-name {
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    .agent-status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--text-dark);
+    }
+
+    .status-active {
+      background: var(--color-success);
+      box-shadow: 0 0 6px var(--color-success);
+    }
+
+    .status-thinking {
+      background: var(--color-warning);
+      box-shadow: 0 0 6px var(--color-warning);
+      animation: pulse 1.5s infinite ease-in-out;
+    }
+
+    .controls-panel {
+      margin-top: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      padding-top: 16px;
+    }
+
+    .btn {
+      width: 100%;
+      padding: 10px;
+      border-radius: var(--border-radius-md);
+      font-weight: 600;
+      font-family: var(--font-outfit);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      border: none;
+      transition: var(--transition-smooth);
+      font-size: 0.82rem;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--color-primary), var(--color-secondary));
+      color: #ffffff;
+    }
+
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.04);
+      color: var(--text-main);
+      border: 1px solid var(--border-color);
+    }
+
+    /* -------------------------------------------------------------
+       ANIMATIONS
+       ------------------------------------------------------------- */
+    @keyframes pulse {
+
+      0%,
+      100% {
+        opacity: 0.6;
+      }
+
+      50% {
+        opacity: 1;
+        transform: scale(1.1);
+      }
+    }
+
+    @keyframes pulseBorder {
+      from {
+        border-color: rgba(245, 158, 11, 0.3);
+        box-shadow: 0 0 4px rgba(245, 158, 11, 0.15);
+      }
+
+      to {
+        border-color: rgba(245, 158, 11, 0.7);
+        box-shadow: 0 0 8px rgba(245, 158, 11, 0.25);
+      }
+    }
+
+    @keyframes blink {
+
+      0%,
+      100% {
+        opacity: 0;
+      }
+
+      50% {
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(6px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .badge-director {
+      background: rgba(99, 102, 241, 0.15);
+      color: #818cf8;
+      border: 1px solid rgba(99, 102, 241, 0.3);
+    }
+
+    .badge-sme {
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.3);
+    }
+
+    .badge-writer {
+      background: rgba(168, 85, 247, 0.15);
+      color: #c084fc;
+      border: 1px solid rgba(168, 85, 247, 0.3);
+    }
+
+    .badge-critic {
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.3);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="app-container">
+
+    <!-- APP BAR (HEADER) -->
+    <header class="app-bar">
+      <button class="menu-btn" onclick="toggleDrawer(true)">
+        <!-- Hamburger Icon -->
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+          stroke-linecap="round">
+          <line x1="3" y1="12" x2="21" y2="12"></line>
+          <line x1="3" y1="6" x2="21" y2="6"></line>
+          <line x1="3" y1="18" x2="21" y2="18"></line>
+        </svg>
+      </button>
+      <div class="brand">
+        <div class="brand-logo">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+            stroke-linecap="round" stroke-linejoin="round" style="color: white;">
+            <polygon points="6 2 18 2 18 6 6 6 6 2"></polygon>
+            <rect x="3" y="6" width="18" height="16" rx="2"></rect>
+            <line x1="10" y1="12" x2="14" y2="12"></line>
+          </svg>
+        </div>
+        <span class="brand-title">Rx.AI Boardroom</span>
+      </div>
+      <span class="panel-header-badge" id="layout-frame-tag"
+        style="border-color: var(--color-primary); color: var(--color-primary)">chat_only</span>
+    </header>
+
+    <!-- COMPACT TIMELINE / STEPPER -->
+    <section class="timeline-bar">
+      <div class="timeline-steps">
+        <div class="timeline-line"></div>
+        <div class="timeline-line-fill" id="timeline-progress"></div>
+
+        <div class="step-node active" id="node-1" onclick="jumpToStage(1)">
+          <div class="step-circle">1</div>
+          <div class="step-label">Requirements</div>
+        </div>
+        <div class="step-node" id="node-2" onclick="jumpToStage(2)">
+          <div class="step-circle">2</div>
+          <div class="step-label">Clarification</div>
+        </div>
+        <div class="step-node" id="node-3" onclick="jumpToStage(3)">
+          <div class="step-circle">3</div>
+          <div class="step-label">Roundtable</div>
+        </div>
+        <div class="step-node" id="node-4" onclick="jumpToStage(4)">
+          <div class="step-circle">4</div>
+          <div class="step-label">Drafting</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- WORKSPACE -->
+    <div class="workspace">
+
+      <!-- STAGE 1 & 2: CHAT ONLY FRAME -->
+      <div class="layout-frame frame-chat-only active" id="layout-chat-only">
+        <div class="glass-panel">
+          <div class="panel-header">
+            <span class="panel-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" stroke-linejoin="round" style="color: var(--color-primary);">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
+              Dialogue Feed
+            </span>
+          </div>
+
+          <div class="panel-content" id="chat-feed">
+            <!-- Initial User Prompt -->
+            <div class="chat-bubble bubble-user">
+              <div class="bubble-sender">User</div>
+              <div class="bubble-text">Prepare a short story in the style of Sherlock holmes for children to understand
+                about the basics of AI.</div>
+              <div class="bubble-time">14:00</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STAGE 3: TABS LAYOUT FRAME (Translated from Split Screen) -->
+      <div class="layout-frame frame-split-screen" id="layout-split-screen">
+
+        <div class="tab-bar">
+          <button class="tab-btn active" id="tab-btn-debate" onclick="switchTab('debate')">Roundtable Debate</button>
+          <button class="tab-btn" id="tab-btn-prototype" onclick="switchTab('prototype')">Story Outline</button>
+        </div>
+
+        <div class="tab-content">
+
+          <!-- Tab 1: Debate Log Panel -->
+          <div class="tab-panel active" id="panel-debate">
+            <div class="glass-panel">
+              <div class="panel-content" id="debate-feed">
+                <!-- Populated dynamically -->
+              </div>
+            </div>
+          </div>
+
+          <!-- Tab 2: Story Outline Prototype Panel -->
+          <div class="tab-panel" id="panel-prototype">
+            <div class="glass-panel prototype-viewer">
+              <div class="prototype-visual-card">
+                <div style="display: flex; gap: 6px;">
+                  <span class="concept-tag">Training Data</span>
+                  <span class="concept-tag">Pattern Recognition</span>
+                </div>
+                <div class="meta-box">
+                  <strong style="color: white; font-size: 0.85rem;" id="proto-title">Sherlock Holmes and the Case of the
+                    Confused Canine</strong>
+                  <div style="color: var(--text-muted); font-size: 0.72rem; margin-top: 2px;">Ages 8-10 | Educational
+                  </div>
+                </div>
+              </div>
+
+              <!-- JSON Outline -->
+              <pre class="json-code" id="proto-json-box">
+{
+  "title": "Case of the Confused Canine",
+  "concepts": ["training_data", "patterns"],
+  "setting": "London Toy Emporium, Victorian",
+  "characters": [
+    "Sherlock Holmes",
+    "Dr. Watson",
+    "Barnaby (Robot Dog)"
+  ],
+  "puzzle_beats": [
+    "1. Barnaby welcomes the burglar...",
+    "2. Holmes checks photo databases...",
+    "3. Retrained models solve crime."
+  ]
+}</pre>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- STAGE 4: STREAMING CANVAS FRAME -->
+      <div class="layout-frame frame-canvas" id="layout-canvas">
+        <div class="glass-panel" style="position: relative;">
+          <div class="panel-header">
+            <span class="panel-title">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+                stroke-linecap="round" style="color: var(--color-success);">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+              Streaming Draft
+            </span>
+            <span class="panel-header-badge">Writer Streaming</span>
+          </div>
+
+          <div class="draft-canvas" id="draft-scroll-container">
+            <div class="draft-stream" id="story-draft-text">
+              <!-- Streams token by token -->
+            </div>
+          </div>
+
+          <!-- Floating Comment Cards Button -->
+          <button class="floating-critic-btn" id="critic-fab" onclick="openCriticSheet(true)">
+            <!-- Message Square Icon -->
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
+            Review Comments (<span id="critic-count">0</span>)
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- CRITIC BOTTOM SHEET DRAWER -->
+    <div class="critic-sheet-backdrop" id="critic-backdrop" onclick="openCriticSheet(false)"></div>
+    <div class="critic-bottom-sheet" id="critic-bottom-sheet">
+      <div class="sheet-handle-bar" onclick="toggleCriticSheetExpand()">
+        <div class="sheet-handle"></div>
+      </div>
+      <div class="sheet-header">
+        <span class="sheet-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            style="color: var(--color-warning);">
+            <path
+              d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z">
+            </path>
+          </svg>
+          Critic Feedback Review
+        </span>
+        <button class="sheet-close-btn" onclick="openCriticSheet(false)">✖</button>
+      </div>
+      <div class="sheet-content" id="critic-cards-container">
+        <!-- Published comment cards will appear here -->
+        <div style="text-align: center; color: var(--text-dark); font-size: 0.75rem; margin-top: 20px;"
+          id="no-comments-label">
+          No active review items at this moment.
+        </div>
+      </div>
+    </div>
+
+    <!-- SIDE DRAWER OVERLAY -->
+    <div class="drawer-backdrop" id="drawer-backdrop" onclick="toggleDrawer(false)"></div>
+    <aside class="mobile-drawer" id="mobile-drawer">
+      <div class="drawer-header">
+        <div class="brand">
+          <div class="brand-logo">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"
+              style="color: white;">
+              <polygon points="6 2 18 2 18 6 6 6 6 2"></polygon>
+              <rect x="3" y="6" width="18" height="16" rx="2"></rect>
+            </svg>
+          </div>
+          <span class="brand-title">Rx.AI Console</span>
+        </div>
+        <button class="sheet-close-btn" style="width:28px; height:28px; font-size:0.8rem;"
+          onclick="toggleDrawer(false)">✖</button>
+      </div>
+
+      <div class="section-title">Session Details</div>
+      <div class="metadata-card">
+        <div class="meta-row">
+          <span class="meta-label">Session ID</span>
+          <span class="meta-val">sess_4a9b</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">LLM Provider</span>
+          <span class="meta-val">Gemini 3.5</span>
+        </div>
+        <div class="meta-row">
+          <span class="meta-label">Active Flow</span>
+          <span class="meta-val">writers_room</span>
+        </div>
+      </div>
+
+      <div class="section-title">Active Roster</div>
+      <div class="roster-list">
+        <div class="agent-item">
+          <div class="agent-info">
+            <div class="agent-avatar badge-director">D</div>
+            <div>
+              <div class="agent-name">Director</div>
+              <div style="font-size: 0.6rem; color: var(--text-dark);">Orchestrator</div>
+            </div>
+          </div>
+          <div class="agent-status-indicator" id="status-director"></div>
+        </div>
+
+        <div class="agent-item">
+          <div class="agent-info">
+            <div class="agent-avatar badge-sme">T</div>
+            <div>
+              <div class="agent-name">Tech SME</div>
+              <div style="font-size: 0.6rem; color: var(--text-dark);">Factual Analyst</div>
+            </div>
+          </div>
+          <div class="agent-status-indicator" id="status-sme"></div>
+        </div>
+
+        <div class="agent-item">
+          <div class="agent-info">
+            <div class="agent-avatar badge-writer">W</div>
+            <div>
+              <div class="agent-name">Writer</div>
+              <div style="font-size: 0.6rem; color: var(--text-dark);">Storyteller</div>
+            </div>
+          </div>
+          <div class="agent-status-indicator" id="status-writer"></div>
+        </div>
+
+        <div class="agent-item">
+          <div class="agent-info">
+            <div class="agent-avatar badge-critic">C</div>
+            <div>
+              <div class="agent-name">Critic</div>
+              <div style="font-size: 0.6rem; color: var(--text-dark);">Quality Assurance</div>
+            </div>
+          </div>
+          <div class="agent-status-indicator" id="status-critic"></div>
+        </div>
+      </div>
+
+      <!-- Controls Panel at Bottom -->
+      <div class="controls-panel">
+        <div class="section-title" style="margin-top: 0;">Simulation controls</div>
+        <button class="btn btn-primary" id="btn-play-sim" onclick="toggleDrawer(false); startSimulation();">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor">
+            <polygon points="5 3 19 12 5 21 5 3"></polygon>
+          </svg>
+          Auto Play Journey
+        </button>
+        <button class="btn btn-secondary" onclick="toggleDrawer(false); resetSimulation();">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
+            stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.5 2v6h-6M21.34 15.57a10 10 0 1 1-.57-8.38l5.67-5.67"></path>
+          </svg>
+          Reset Simulation
+        </button>
+      </div>
+    </aside>
+
+  </div>
+
+  <script>
+    /* =============================================================
+       SIMULATION DATA
+       ============================================================= */
+    const STORY_DRAFT_PARAGRAPHS = [
+      "The heavy morning fog rolled through Baker Street, but inside our lodgings, the atmosphere was thick with a mystery of an entirely modern sort. Mr. Sherlock Holmes was crouched on the rug, examining a mechanical, brass-plated bulldog that sat whirring and ticking on the hearth.",
+      "“Observe, Watson,” Holmes murmured, his sharp eyes narrowing as he adjusted a small cog on the robotic canine's collar. “This is Barnaby, the pride of the London Toy Emporium. Designed by their head toy maker, Barnaby was programmed to guard the shop's rarest dolls from thieves. Yet, last evening, a burglar walked straight out with the Golden Harlequin, and Barnaby did not emit a single warning bark. Instead, the dog wagged its brass tail and offered the thief a rubber ball!”",
+      "“Astonishing, Holmes!” I cried, leaning in. “Was its clockwork broken?”",
+      "“No, Watson. Barnaby does not think with springs and gears alone. He thinks with what the modern engineers call 'Machine Learning.' He was fed thousands of photos of friendly children and shop workers to recognize who is allowed in. That collection of pictures is what we call 'Training Data.' If Barnaby sees patterns that look like those friendly pictures, he wags his tail.”",
+      "Holmes pulled out a small glass card from the dog's collar. “Aha! Look here. The pictures inside Barnaby's library of friends have been swapped! The burglar replaced the human face patterns with photographs of kittens! When the thief walked in wearing a cat mask, Barnaby's pattern recognition matched the mask to his corrupted training data, concluding the visitor was an innocent, friendly cat!”"
+    ];
+
+    const CRITIC_COMMENTS = [
+      {
+        id: "comment-1",
+        pIdx: 1,
+        text: "The description of the robot dog is great, but we should make sure kids know it's a robotic toy and not a real dog so they don't get confused.",
+        resolved: false
+      },
+      {
+        id: "comment-2",
+        pIdx: 3,
+        text: "Make sure Watson's reaction is clear. It highlights the mystery's stakes. Let's make him sound more surprised.",
+        resolved: false
+      },
+      {
+        id: "comment-3",
+        pIdx: 4,
+        text: "The concept of 'Training Data' is introduced well, but we should explicitly emphasize that if the training data is bad, the AI will make bad decisions (Garbage In, Garbage Out).",
+        resolved: false
+      }
+    ];
+
+    /* =============================================================
+       STATE CONTROLLER
+       ============================================================= */
+    let currentStage = 1;
+    let isSimulating = false;
+    let typingSpeed = 25;
+    let currentParagraphIndex = 0;
+    let currentTextIndex = 0;
+    let activeComments = [];
+
+    // DOM Elements
+    const chatFeed = document.getElementById("chat-feed");
+    const debateFeed = document.getElementById("debate-feed");
+    const storyDraftText = document.getElementById("story-draft-text");
+    const criticCardsContainer = document.getElementById("critic-cards-container");
+    const timelineProgress = document.getElementById("timeline-progress");
+    const layoutFrameTag = document.getElementById("layout-frame-tag");
+    const draftScrollContainer = document.getElementById("draft-scroll-container");
+    const criticCount = document.getElementById("critic-count");
+    const criticFab = document.getElementById("critic-fab");
+
+    // Agent status indicators
+    const dStatus = document.getElementById("status-director");
+    const sStatus = document.getElementById("status-sme");
+    const wStatus = document.getElementById("status-writer");
+    const cStatus = document.getElementById("status-critic");
+
+    function setAgentStatus(director, sme, writer, critic) {
+      dStatus.className = "agent-status-indicator " + (director ? "status-" + director : "");
+      sStatus.className = "agent-status-indicator " + (sme ? "status-" + sme : "");
+      wStatus.className = "agent-status-indicator " + (writer ? "status-" + writer : "");
+      cStatus.className = "agent-status-indicator " + (critic ? "status-" + critic : "");
+    }
+
+    /* =============================================================
+       STAGE & LAYOUT TRANSITIONS
+       ============================================================= */
+    function jumpToStage(stageNum) {
+      if (isSimulating && stageNum !== currentStage) {
+        stopSimulation();
+      }
+
+      currentStage = stageNum;
+      updateTimelineUI();
+
+      // Deactivate all frames
+      document.querySelectorAll(".layout-frame").forEach(f => f.classList.remove("active"));
+
+      if (stageNum === 1) {
+        document.getElementById("layout-chat-only").classList.add("active");
+        layoutFrameTag.textContent = "chat_only";
+        layoutFrameTag.style.borderColor = "var(--color-primary)";
+        layoutFrameTag.style.color = "var(--color-primary)";
+        setAgentStatus("active", "status-idle", "status-idle", "status-idle");
+
+        chatFeed.innerHTML = `
+          <div class="chat-bubble bubble-user">
+            <div class="bubble-sender">User</div>
+            <div class="bubble-text">Prepare a short story in the style of Sherlock holmes for children to understand about the basics of AI.</div>
+            <div class="bubble-time">14:00</div>
+          </div>
+          <div class="chat-bubble bubble-agent">
+            <div class="bubble-sender director">Director</div>
+            <div class="bubble-text"><strong>Analyzing prompt...</strong> Initializing graph for template <em>debate_to_write</em>. Broadly assigning tasks in memory. Tech SME: Identify core AI concepts like machine learning. Writer: Outline narrative.</div>
+            <div class="bubble-time">14:00</div>
+          </div>
+        `;
+      }
+      else if (stageNum === 2) {
+        document.getElementById("layout-chat-only").classList.add("active");
+        layoutFrameTag.textContent = "chat_only";
+        layoutFrameTag.style.borderColor = "var(--color-primary)";
+        layoutFrameTag.style.color = "var(--color-primary)";
+        setAgentStatus("thinking", "status-idle", "status-idle", "status-idle");
+
+        chatFeed.innerHTML = `
+          <div class="chat-bubble bubble-user">
+            <div class="bubble-sender">User</div>
+            <div class="bubble-text">Prepare a short story in the style of Sherlock holmes for children to understand about the basics of AI.</div>
+            <div class="bubble-time">14:00</div>
+          </div>
+          <div class="chat-bubble bubble-agent">
+            <div class="bubble-sender director">Director</div>
+            <div class="bubble-text"><strong>Analyzing prompt...</strong> Initializing graph for template <em>debate_to_write</em>. Broadly assigning tasks in memory. Tech SME: Identify core AI concepts like machine learning. Writer: Outline narrative.</div>
+            <div class="bubble-time">14:00</div>
+          </div>
+          <div class="chat-bubble bubble-agent" style="border-color: var(--color-warning);">
+            <div class="bubble-sender director" style="color: var(--color-warning);">Director (Clarification)</div>
+            <div class="bubble-text">To create the perfect brief for our creative team, could you clarify:<br>1. What age group is this story targetting?<br>2. Which AI concepts would you prefer we focus on (e.g. Training Data)?</div>
+            <div class="bubble-time">14:01</div>
+          </div>
+          <div class="clarification-prompt-box" id="clarification-input-widget">
+            <div class="clarification-header">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line></svg>
+              Awaiting User Response
+            </div>
+            <div class="input-group">
+              <input type="text" class="chat-input" id="user-clarification-input" value="Ages 8-10, focus on training data and pattern recognition." placeholder="Type response...">
+              <button class="btn-send" onclick="submitClarification()">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+              </button>
+            </div>
+          </div>
+        `;
+      }
+      else if (stageNum === 3) {
+        document.getElementById("layout-split-screen").classList.add("active");
+        layoutFrameTag.textContent = "split_screen_prototype";
+        layoutFrameTag.style.borderColor = "var(--color-secondary)";
+        layoutFrameTag.style.color = "var(--color-secondary)";
+        setAgentStatus("active", "status-idle", "status-idle", "status-idle");
+        switchTab('debate'); // Default tab
+
+        debateFeed.innerHTML = `
+          <div class="debate-card">
+            <div class="debate-card-header">
+              <span class="debate-agent-role" style="color: #34d399">Tech SME</span>
+              <span style="font-size: 0.6rem; color: var(--text-dark)">14:02</span>
+            </div>
+            <div class="debate-content">
+              For children ages 8-10, we should explain <strong>training data</strong> using a simple analogy. Let's show neural networks as pattern matchers.
+            </div>
+          </div>
+          <div class="debate-card">
+            <div class="debate-card-header">
+              <span class="debate-agent-role" style="color: #c084fc">Writer</span>
+              <span style="font-size: 0.6rem; color: var(--text-dark)">14:02</span>
+            </div>
+            <div class="debate-content">
+              I suggest a mystery set at the <strong>London Toy Emporium</strong> where a robotic watchdog, Barnaby, is fooled by pattern corruption.
+            </div>
+          </div>
+          <div class="debate-card">
+            <div class="debate-card-header">
+              <span class="debate-agent-role" style="color: #fbbf24">Critic</span>
+              <span style="font-size: 0.6rem; color: var(--text-dark)">14:03</span>
+            </div>
+            <div class="debate-content">
+              Both ideas are excellent. We need to clearly explain the connection between corrupting the dataset and the dog's mistake.
+            </div>
+          </div>
+          <div class="debate-card" style="border-left: 2px solid var(--color-primary)">
+            <div class="debate-card-header">
+              <span class="debate-agent-role" style="color: #818cf8">Director</span>
+              <span style="font-size: 0.6rem; color: var(--text-dark)">14:03</span>
+            </div>
+            <div class="debate-content" style="color: var(--text-main)">
+              Excellent alignment. Invoking <code>synthesize_json_prototype</code> to output the structured outline.
+            </div>
+          </div>
+        `;
+      }
+      else if (stageNum === 4) {
+        document.getElementById("layout-canvas").classList.add("active");
+        layoutFrameTag.textContent = "scriptwriting_canvas";
+        layoutFrameTag.style.borderColor = "var(--color-success)";
+        layoutFrameTag.style.color = "var(--color-success)";
+        setAgentStatus("status-idle", "status-idle", "active", "thinking");
+
+        storyDraftText.innerHTML = "";
+        criticCardsContainer.innerHTML = `<div style="text-align: center; color: var(--text-dark); font-size: 0.75rem; margin-top: 20px;" id="no-comments-label">No active review items at this moment.</div>`;
+        activeComments = [];
+        updateCriticBadge();
+      }
+    }
+
+    function updateTimelineUI() {
+      for (let i = 1; i <= 4; i++) {
+        const node = document.getElementById("node-" + i);
+        if (i < currentStage) {
+          node.className = "step-node completed";
+        } else if (i === currentStage) {
+          node.className = "step-node active";
+        } else {
+          node.className = "step-node";
+        }
+      }
+      const percent = ((currentStage - 1) / 3) * 100;
+      timelineProgress.style.width = percent + "%";
+    }
+
+    /* =============================================================
+       TAB CONTROLLER FOR STAGE 3
+       ============================================================= */
+    function switchTab(tabName) {
+      document.getElementById("tab-btn-debate").classList.remove("active");
+      document.getElementById("tab-btn-prototype").classList.remove("active");
+      document.getElementById("panel-debate").classList.remove("active");
+      document.getElementById("panel-prototype").classList.remove("active");
+
+      if (tabName === 'debate') {
+        document.getElementById("tab-btn-debate").classList.add("active");
+        document.getElementById("panel-debate").classList.add("active");
+      } else {
+        document.getElementById("tab-btn-prototype").classList.add("active");
+        document.getElementById("panel-prototype").classList.add("active");
+      }
+    }
+
+    /* =============================================================
+       MOBILE DRAWER CONTROLLER
+       ============================================================= */
+    function toggleDrawer(isOpen) {
+      const drawer = document.getElementById("mobile-drawer");
+      const backdrop = document.getElementById("drawer-backdrop");
+      if (isOpen) {
+        drawer.classList.add("open");
+        backdrop.classList.add("active");
+      } else {
+        drawer.classList.remove("open");
+        backdrop.classList.remove("active");
+      }
+    }
+
+    /* =============================================================
+       CRITIC BOTTOM SHEET CONTROLLER
+       ============================================================= */
+    function openCriticSheet(isOpen) {
+      const sheet = document.getElementById("critic-bottom-sheet");
+      const backdrop = document.getElementById("critic-backdrop");
+      if (isOpen) {
+        sheet.classList.add("open");
+        backdrop.classList.add("active");
+      } else {
+        sheet.classList.remove("open");
+        sheet.classList.remove("expanded"); // Reset expansion height
+        backdrop.classList.remove("active");
+      }
+    }
+
+    function toggleCriticSheetExpand() {
+      const sheet = document.getElementById("critic-bottom-sheet");
+      sheet.classList.toggle("expanded");
+      if (sheet.classList.contains("expanded")) {
+        sheet.style.height = "75%";
+      } else {
+        sheet.style.height = "50%";
+      }
+    }
+
+    function updateCriticBadge() {
+      const unresCount = activeComments.filter(c => !c.resolved).length;
+      criticCount.textContent = unresCount;
+      if (unresCount > 0) {
+        criticFab.style.display = "flex";
+      } else {
+        criticFab.style.display = "none";
+      }
+    }
+
+    /* =============================================================
+       STAGE 2 INTERACTION: SUBMIT CLARIFICATION
+       ============================================================= */
+    function submitClarification() {
+      const input = document.getElementById("user-clarification-input");
+      if (!input.value.trim()) return;
+
+      const widget = document.getElementById("clarification-input-widget");
+      widget.innerHTML = `<div style="text-align: center; color: var(--color-success); font-size: 0.8rem; padding: 6px;">✔ Brief Updated. Transitioning to roundtable...</div>`;
+
+      setTimeout(() => {
+        const userMsg = document.createElement("div");
+        userMsg.className = "chat-bubble bubble-user";
+        userMsg.innerHTML = `
+          <div class="bubble-sender">User</div>
+          <div class="bubble-text">${input.value}</div>
+          <div class="bubble-time">14:01</div>
+        `;
+        chatFeed.appendChild(userMsg);
+        chatFeed.scrollTop = chatFeed.scrollHeight;
+
+        setTimeout(() => {
+          const dirMsg = document.createElement("div");
+          dirMsg.className = "chat-bubble bubble-agent";
+          dirMsg.innerHTML = `
+            <div class="bubble-sender director">Director</div>
+            <div class="bubble-text"><strong>Response received.</strong> Commencing Roundtable discussions.</div>
+            <div class="bubble-time">14:02</div>
+          `;
+          chatFeed.appendChild(dirMsg);
+          chatFeed.scrollTop = chatFeed.scrollHeight;
+
+          setTimeout(() => {
+            jumpToStage(3);
+          }, 1500);
+        }, 1000);
+
+      }, 400);
+    }
+
+    /* =============================================================
+       STAGE 4 INTERACTION: STREAMING TEXT & CRITIC CARDS
+       ============================================================= */
+    function streamNextParagraph() {
+      if (currentParagraphIndex >= STORY_DRAFT_PARAGRAPHS.length) {
+        const cursor = document.getElementById("canvas-cursor");
+        if (cursor) cursor.remove();
+        setAgentStatus("status-idle", "status-idle", "status-idle", "status-idle");
+        isSimulating = false;
+        document.getElementById("btn-play-sim").innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Auto Play Journey`;
+        return;
+      }
+
+      const pText = STORY_DRAFT_PARAGRAPHS[currentParagraphIndex];
+      const pElem = document.createElement("p");
+      pElem.style.marginBottom = "12px";
+      pElem.innerHTML = `<span class="p-content"></span>`;
+      storyDraftText.appendChild(pElem);
+
+      const spanContent = pElem.querySelector(".p-content");
+
+      let cursor = document.getElementById("canvas-cursor");
+      if (!cursor) {
+        cursor = document.createElement("span");
+        cursor.id = "canvas-cursor";
+        cursor.className = "streaming-cursor";
+      }
+      pElem.appendChild(cursor);
+
+      currentTextIndex = 0;
+
+      function typeChar() {
+        if (!isSimulating && currentStage !== 4) return; // Halt if simulation stopped
+
+        if (currentTextIndex < pText.length) {
+          spanContent.textContent += pText[currentTextIndex];
+          currentTextIndex++;
+          draftScrollContainer.scrollTop = draftScrollContainer.scrollHeight;
+          setTimeout(typeChar, typingSpeed);
+        } else {
+          // Check for comments
+          const comment = CRITIC_COMMENTS.find(c => c.pIdx === (currentParagraphIndex + 1));
+          if (comment) {
+            publishCriticCard(comment);
+          }
+          currentParagraphIndex++;
+          setTimeout(streamNextParagraph, 1200);
+        }
+      }
+
+      typeChar();
+    }
+
+    function publishCriticCard(comment) {
+      setAgentStatus("status-idle", "status-idle", "active", "thinking");
+      setTimeout(() => {
+        setAgentStatus("status-idle", "status-idle", "active", "status-active");
+      }, 400);
+
+      activeComments.push(comment);
+      updateCriticBadge();
+
+      // Remove "no comments" message
+      const noComments = document.getElementById("no-comments-label");
+      if (noComments) noComments.remove();
+
+      const card = document.createElement("div");
+      card.className = "comment-card active-card";
+      card.id = comment.id;
+      card.innerHTML = `
+        <div class="card-header">
+          <span class="critic-label">
+            <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+            Critic Review
+          </span>
+          <span style="font-size: 0.6rem; color: var(--text-dark)">just now</span>
+        </div>
+        <div class="card-body">
+          ${comment.text}
+        </div>
+        <div class="card-actions" id="actions-${comment.id}">
+          <button class="btn-action btn-accept" onclick="resolveComment('${comment.id}', 'accept')">Accept</button>
+          <button class="btn-action btn-reject" onclick="resolveComment('${comment.id}', 'reject')">Reject</button>
+          <button class="btn-action btn-discuss" onclick="resolveComment('${comment.id}', 'discuss')">Discuss</button>
+        </div>
+        <div class="card-resolution" id="res-${comment.id}"></div>
+      `;
+
+      criticCardsContainer.appendChild(card);
+      criticCardsContainer.scrollTop = criticCardsContainer.scrollHeight;
+
+      // Pulse floating FAB to draw attention
+      criticFab.style.animation = "floatPulse 0.5s ease 4 alternate";
+      setTimeout(() => {
+        criticFab.style.animation = "floatPulse 2s infinite alternate";
+      }, 2000);
+    }
+
+    function resolveComment(id, action) {
+      const actionsDiv = document.getElementById("actions-" + id);
+      const resDiv = document.getElementById("res-" + id);
+      const card = document.getElementById(id);
+
+      card.classList.remove("active-card");
+      actionsDiv.style.display = "none";
+      resDiv.style.display = "flex";
+
+      if (action === 'accept') {
+        resDiv.innerHTML = `<span class="res-accepted">✔ Accepted — Modified draft</span>`;
+      } else if (action === 'reject') {
+        resDiv.innerHTML = `<span class="res-rejected">✖ Rejected — Feedback discarded</span>`;
+      } else {
+        resDiv.innerHTML = `<span style="color: var(--color-primary);">💬 Negotiating with Critic</span>`;
+      }
+
+      // Update resolution status
+      const comment = activeComments.find(c => c.id === id);
+      if (comment) comment.resolved = true;
+      updateCriticBadge();
+    }
+
+    /* =============================================================
+       AUTO PLAY CONTROLLER
+       ============================================================= */
+    function startSimulation() {
+      isSimulating = true;
+      document.getElementById("btn-play-sim").innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect></svg> Pause Journey`;
+
+      if (currentStage === 1) {
+        setAgentStatus("thinking", "status-idle", "status-idle", "status-idle");
+        setTimeout(() => {
+          if (!isSimulating) return;
+          jumpToStage(2);
+
+          // Automatic submission after 2.5s
+          setTimeout(() => {
+            if (!isSimulating) return;
+            submitClarification();
+
+            let checkStage3 = setInterval(() => {
+              if (currentStage === 3) {
+                clearInterval(checkStage3);
+
+                // Transition to stage 4 after 3.5s
+                setTimeout(() => {
+                  if (!isSimulating) return;
+                  jumpToStage(4);
+
+                  setTimeout(() => {
+                    if (!isSimulating) return;
+                    currentParagraphIndex = 0;
+                    streamNextParagraph();
+                  }, 1000);
+
+                }, 3500);
+              }
+            }, 500);
+
+          }, 2500);
+
+        }, 2000);
+      }
+      else if (currentStage === 4) {
+        storyDraftText.innerHTML = "";
+        criticCardsContainer.innerHTML = `<div style="text-align: center; color: var(--text-dark); font-size: 0.75rem; margin-top: 20px;" id="no-comments-label">No active review items at this moment.</div>`;
+        activeComments = [];
+        updateCriticBadge();
+        currentParagraphIndex = 0;
+        streamNextParagraph();
+      }
+      else {
+        let next = currentStage + 1;
+        if (next > 4) next = 1;
+        jumpToStage(next);
+        if (next === 4) {
+          setTimeout(() => {
+            if (!isSimulating) return;
+            currentParagraphIndex = 0;
+            streamNextParagraph();
+          }, 1000);
+        }
+      }
+    }
+
+    function stopSimulation() {
+      isSimulating = false;
+      document.getElementById("btn-play-sim").innerHTML = `<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"></polygon></svg> Auto Play Journey`;
+    }
+
+    function resetSimulation() {
+      stopSimulation();
+      jumpToStage(1);
+    }
+
+    // Initialize Simulation
+    resetSimulation();
+  </script>
+</body>
+
+</html>
