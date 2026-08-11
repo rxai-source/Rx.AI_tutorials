@@ -191,6 +191,11 @@ V0005_Extensible_AI_Boardroom/
 
 * [ ] Create the end-to-end flow from the FastAPI endpoint for the `writers_room` flow for the different stages implementation and responses from each of the agents.
 
+* [ ] **[INTEGRATION: FEATURE 1 BACKEND]** Build a Character roleplay simulator where we can have scenes and characters will talk to each other in that scene as per their consistent character.
+
+Suggestion by Gemini for implementation : Create a generic `SimulationSubGraph` compiler inside `dynamic_graph_builder.py` that takes character blueprints from the story prototype and maps them to short-context execution nodes.
+
+* [ ] **[INTEGRATION: FEATURE 1 BACKEND]** Create specialized tools for the Director agent within the simulation track: `spawn_scene_sandbox()` to trigger character loop, `inject_environmental_event()` to break conversation loops, and `evaluate_plot_consistency()` to validate narrative logic and alter the main state's JSON blueprint based on results.
 
 * [ ] Do the backend testing for the end-to-end `writers_room` flow for 5 different test scenarios.
 
@@ -200,18 +205,23 @@ V0005_Extensible_AI_Boardroom/
 * [x] Freeze the front-end framework to **Flutter (Dart)** and map how the desktop-style prototype translates to a mobile viewport (Completed: see [mobile_layout_mapping.md](file:///c:/Users/ABC/Projects/A0011_RxAI_YT_Videos/V0004_Agentic_AI_Boardroom/docs/mobile_layout_mapping.md)).
 * [x] Create the mobile layout HTML mockup similar to the ui_prototype.html (Completed: see [ui_prototype_mobile_app.html](file:///c:/Users/ABC/Projects/A0011_RxAI_YT_Videos/V0004_Agentic_AI_Boardroom/frontend/ui_prototype_mobile_app.html))
 
-* [ ] Scaffold the base Flutter project and build the static UI structure (Layouts, Tabs, and Navigation) based on the mobile mockup (NOTE: Plan out this activity based on the html and also give detailed instructions with Gemini's help when scaffolding the flutter project so that it doesnt miss some basic things in the UI)
+* [x] Complete installation of Flutter, Android Studio *(Completed: July 5, 2026)*
+  * **Summary:** Fully configured the environment with zero errors by following the Gemini steps. 
+  * **Tutorial Note:** Emphasize that a complete restart of Antigravity is strictly required after updating the system `PATH` for the built-in terminal to recognize the `flutter` command.
 
-* [ ] Setup Riverpod state management (using `StateNotifierProvider` or `Notifier` + Streams) to interpret UI Layout frames (`LayoutFrame`) and active stage context pushed by the FastAPI backend.
-* [ ] Audit the Flutter UI for all user-interactive controls (Buttons, Text Inputs, Sliders) and document the required API/WebSocket endpoints they will trigger.
-* [ ] Develop the individual pluggable UI Widgets (Chat Widget, Clarification Prompt, Story Prototype Viewer, Streaming Canvas, Critic Cards) as stateless, hardcoded components.
-* [ ] Build dynamic layout screens in Flutter using `AnimatedSwitcher` to transition between layouts (`chatOnly`, `splitScreenPrototype`, `scriptwritingCanvas`) seamlessly without interrupting the WebSocket stream.
-* [ ] Develop an interactive `ChatWidget` in Flutter for requirements gathering, user prompts, and agent dialogue feeds.
-* [ ] Develop a `ClarificationPromptWidget` in Flutter to display the Director's unified queries and accept user responses.
-* [ ] Develop a `StoryPrototypeViewer` widget in Flutter to dynamically render JSON story outlines (title, characters, setting, and puzzle beats).
-* [ ] Develop a `StreamingDraftCanvas` widget in Flutter with a streaming visual cursor to render the Writer's draft text token-by-token.
-* [ ] Develop a `CriticCommentCards` widget in Flutter (integrated via dynamic Bottom Sheet or Sliding Drawer) allowing users to view critique notes and interact with them (e.g., Accept, Reject, or Discuss).
-* [ ] Develop a `StageProgressBar` / Control Panel widget in Flutter to visualize the current state of boardroom graph execution.
+* [x] Scaffold the base Flutter project and build the static UI structure (Layouts, Tabs, and Navigation) based on the mobile mockup *(Completed: July 5, 2026)*
+  * **Summary:** Initiated the task by reviewing the implementation plan with Gemini for an independent quality check. Following the review, Antigravity successfully generated the entire base project scaffolding and static UI structure in just 15 minutes. It did the job of converting the html mockup to a flutter mockup perfectly. However, I realized that after this step, there is a need to not just have a mockup but proper flow of data even though its dummy data, there should be clear communication from flutter ui for each button click so that i can also identify and design the backend endpoints accordingly. Hence, based on this learning, I added the Interactive state mocking and API contract definition as the next task.
+  * **Tutorial Note:** Show how to test the resulting build immediately in the browser by running `flutter run -d chrome` from the terminal.
+
+* [x] **Setup Riverpod state management** (using `Notifier` or `AsyncNotifier` + Streams) to manage UI layout frames (`LayoutFrame`) and `currentStage` using a temporary **Interactive State Mock**.
+* [x] **Build Interactive Mocks for UI Components:**
+    * [x] Wire the chat input's "Submit" button to append user messages to the Riverpod state, simulating a 1-second delay for the "Agent Response."
+    * [x] Create a dummy JSON string representing the Director's "Story Prototype" and wire it into the Stage 3 `StoryPrototypeViewer` widget.
+    * [x] Setup a simulated text stream (using `Stream.periodic`) to feed fake tokens into the Stage 4 `StreamingCanvas` to test real-time rendering.
+
+* [x] **Draft the Formal API / WebSocket Contract:** Documented the exact JSON schemas required from the FastAPI backend (e.g., `{"type": "token", "content": "..."}` and `{"action": "accept_critique", "comment_id": "c-123"}`).
+* [x] **Build dynamic layout screens:** Use `AnimatedSwitcher` or an `IndexedStack` tied to the Riverpod `currentStage` state to verify that transitioning between Stage 2 (Chat) and Stage 3 (Split Screen) happens seamlessly via the mock toggle.
+* [x] **Develop and polish the individual stateless UI Widgets:** Cleaned up the `ChatWidget`, `ClarificationPromptWidget`, `StoryPrototypeViewer`, `StreamingCanvas`, and `CriticCards` so they perfectly accept and display the new dummy data models.
 
 * [ ] Prepare the Youtube Videos 1-3
 
@@ -219,6 +229,10 @@ V0005_Extensible_AI_Boardroom/
 
 * [ ] Integration tests for template loading and dynamic graph building.
 * [ ] Test the Orchestrator's ability to isolate scratchpads across different dynamic agents.
+
+* [ ] **[INTEGRATION: PAID TIER GUARDRAILS]** Write automated unit tests to verify memory tier access limitations (asserting that Free tier users reject processing with deep L4 summarized memory or automated character simulations).
+* [ ] **[INTEGRATION: LOGGING SANDBOX OVERHEAD]** Establish isolated Redis Pub/Sub channels explicitly for character sub-agent timeline observation records to keep main boardroom tracking telemetry completely clean.
+
 * [ ] Replace stub user store with PostgreSQL/NeonDB.
 * [ ] Docker Compose (backend + frontend) & CI/CD pipeline.
 
@@ -228,12 +242,40 @@ V0005_Extensible_AI_Boardroom/
 
 * [ ] **Legal Registration:** Register as a Sole Proprietorship via the Udyam portal (MSME) to establish a formal entity quickly without overhead.
 * [ ] **Financial Setup:** Open a business Current Account to strictly separate SaaS and YouTube revenue from your primary 35 LPA salary. Also decide a suitable price point for SaaS products suite based on deep research. Basic pricing_strategy.md is ready.
+
+* [ ] **[INTEGRATION: PACKAGING PREMIUM VALUE]** Update `pricing_strategy.md` to cleanly gate these new modules:
+  * *Studio Tier ($5):* Access to automated Director persona generation.
+  * *Executive Tier ($20):* Full access to custom character simulation graphs, manual sandbox interaction tools, and automated structural plot healing.
+
 * [ ] **Payments & Compliance:** Complete GST registration (necessary for international software service export) and finalize Stripe/Razorpay merchant approval.
 * [ ] **Sponsorship Outreach:** Create a 1-page channel Media Kit and execute cold email pitches to target AI developer tools (e.g., Pinecone, LangChain) to secure the 3 video sponsorships.
 
 * [ ] Release the Youtube Videos 7-10.
 
 * [ ] **Launch Wedge Execution:** Draft distribution posts and map out the release schedule for developer communities, including Hacker News, Reddit (r/LocalLLaMA, r/SideProject), and X/Twitter.
+---
+
+## Actual Implementation order
+
+*This section tracks the chronological order in which features were actually implemented, bridging across different planned phases. This will help formulate videos or guides on the actual approach used.*
+
+### 1. Backend Core & Configuration (From Phase 2)
+* [x] Implement `Room Templates` loader (parse YAML/JSON configs for personas and stages).
+* [x] Build the `dynamic_graph_builder.py` to compile LangGraph state machines based on the loaded template's stages.
+* [x] Replace hardcoded Director/Writer with a generic `DynamicAgent` class that absorbs a persona from the config.
+* [x] Finalize the user journey for the writers' room flow.
+* [x] Add the activities for the tech_SME RAG pipeline & feature list.
+* [x] Update the base agent with characteristic parameters.
+* [x] Create and test Director agent in `test_dynamic_agent.py`.
+
+### 2. UI Mockup & Frontend Pivot (From Phase 3)
+* [x] Finalize UI tech stack (Flutter).
+* [x] Setup environment (Flutter/Android Studio).
+* [x] Scaffold base project and static UI.
+* [x] **Setup Riverpod state management & Mocks:** Implemented Riverpod Notifiers and StreamProviders to simulate interactive states (delayed chat responses, token streaming) without a backend.
+* [x] **Draft Formal API Contract:** Created `docs/api_contract.md` to finalize the `BoardroomEvent` JSON schema needed by the frontend, acting as a strict target for backend phase 4.
+* [x] **Widget Implementation:** Completed `ChatWidget`, `StoryPrototypeViewer`, `StreamingCanvas`, and `CriticCommentCards` utilizing mock data providers.
+
 ---
 
 ## Key Design Decisions
@@ -249,6 +291,10 @@ V0005_Extensible_AI_Boardroom/
 
 
 4. **Environment Action Spaces (Tools)**: Agents are granted specific capabilities based on the active template. A Shark Tank investor agent can execute a `make_offer()` function, which the backend routes directly to the frontend's Deal Tracker UI.
+
+5. **Mocking State with Riverpod**: For rapid UI iteration without a backend, we introduced temporary `Notifier` and `StreamProvider` mocks. These mock the time delay of LLM generation and the streaming behavior of tokens, proving out the UI's resilience to async data.
+
+6. **Formalizing API Contracts**: By building the frontend mocks first, we identified the exact JSON structure needed (`BoardroomEvent`) for WebSocket streaming, ensuring the backend endpoints built in Phase 4 match the frontend's needs perfectly.
 
 
 ## FAQs
