@@ -2,8 +2,8 @@ services:
   - type: web
     name: video-agent-studio
     env: docker
-    dockerfilePath: ./V0007_Video_Production_Agentic_Solution/video-agent-system/Dockerfile
-    dockerContext: ./V0007_Video_Production_Agentic_Solution/video-agent-system
+    dockerfilePath: ./video-agent-studio/video-agent-system/Dockerfile
+    dockerContext: ./video-agent-studio/video-agent-system
     plan: standard
     healthCheckPath: /mcp_healthcheck
     envVars:
