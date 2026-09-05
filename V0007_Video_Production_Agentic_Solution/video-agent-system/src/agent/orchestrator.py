@@ -1,9 +1,10 @@
 import json
+import time
 from dataclasses import dataclass, field
 from typing import List, Dict, Any, Optional
 
 from src.agent.state import Task
-from src.llm_clients.openrouter_client_simple import OpenRouterClient
+from src.llm_clients.failover_client import LLMFailoverClient
 from src.mcp_server.server import mcp
 
 
@@ -26,18 +27,18 @@ class Orchestrator:
     Orchestrator agent responsible for creating execution plans for media workflows.
     """
 
-    def __init__(self, llm_client: Optional[OpenRouterClient] = None):
-        self.llm_client = llm_client or OpenRouterClient(
-            model_id="nvidia/nemotron-3-ultra-550b-a55b:free"
-        )
+    def __init__(self, llm_client: Optional[Any] = None):
+        """Create an orchestrator backed by the production failover chain by default."""
+        self.llm_client = llm_client or LLMFailoverClient()
+        self.last_trace_events: List[Dict[str, Any]] = []
 
     # ---------------------------------------------------------
     # 1. LLM CALL FUNCTION
     # ---------------------------------------------------------
     async def call_llm(self, prompt: str, model: Optional[str] = None) -> str:
         """
-        Calls the LLM using OpenRouterClient.
-        Uses nvidia/nemotron-3-ultra-550b-a55b:free model by default.
+        Routes through Gemini 3.7 → 3.6 → 3.5 → OpenRouter Nemotron → Groq
+        GPT-OSS when no client override is supplied.
         """
         return await self.llm_client.generate_text(prompt, model=model)
 
@@ -52,8 +53,10 @@ class Orchestrator:
         try:
             tools = await mcp.list_tools()
             for tool in tools:
+                mcp_tool = tool.to_mcp_tool() if hasattr(tool, "to_mcp_tool") else None
                 args_schema = (
-                    getattr(tool, "parameters", None)
+                    (mcp_tool.inputSchema if mcp_tool else None)
+                    or getattr(tool, "parameters", None)
                     or getattr(tool, "args_schema", None)
                     or getattr(tool, "parameters_schema", {})
                 )
@@ -72,6 +75,8 @@ class Orchestrator:
         including the tools and their argument schemas, calls the LLM, and returns a Plan
         containing a list of Task items as defined in state.py.
         """
+        started_at = time.time()
+        self.last_trace_events = [{"event": "orchestrator_started", "timestamp": started_at}]
         # Retrieve list of available MCP tools
         tools_info = await self.get_available_mcp_tools()
         tools_json = json.dumps(tools_info, indent=2)
@@ -115,6 +120,8 @@ Do NOT include any explanation outside the JSON block. Return ONLY the JSON obje
 """
 
         response_text = await self.call_llm(detailed_prompt)
+        for attempt in getattr(self.llm_client, "last_attempts", []):
+            self.last_trace_events.append({"event": "llm_attempt", **attempt})
 
         tasks_list: List[Task] = []
         try:
@@ -138,6 +145,7 @@ Do NOT include any explanation outside the JSON block. Return ONLY the JSON obje
                 tasks_list.append(task)
         except Exception as e:
             print(f"Error parsing LLM plan JSON: {e}. Raw response: {response_text}")
+            self.last_trace_events.append({"event": "plan_parse_failed", "error": str(e)})
             fallback_task: Task = {
                 "id": "task_1",
                 "tool_name": "generate_tts",
@@ -148,5 +156,11 @@ Do NOT include any explanation outside the JSON block. Return ONLY the JSON obje
                 }
             }
             tasks_list.append(fallback_task)
+
+        self.last_trace_events.append({
+            "event": "plan_created",
+            "task_count": len(tasks_list),
+            "duration_ms": round((time.time() - started_at) * 1000),
+        })
 
         return Plan(tasks=tasks_list)

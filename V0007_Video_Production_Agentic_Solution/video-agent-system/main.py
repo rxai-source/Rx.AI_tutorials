@@ -6,13 +6,15 @@ import time
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 import uvicorn
 
 # Add project root directory to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 from src.core.audio_engine import generate_tts
+from src.core.artifacts import validate_artifact_reference
 from src.mcp_server.server import mcp
 
 # Initialize FastAPI application
@@ -21,6 +23,29 @@ app = FastAPI(
     description="REST API for Agent workflow orchestration and FastMCP tool health monitoring.",
     version="0.1.0",
 )
+
+
+class OrchestratorRequest(BaseModel):
+    """Postman request body for a video-production planning run."""
+
+    user_message: str = Field(
+        min_length=1,
+        examples=["Create a 30-second explainer video about agentic AI."],
+    )
+    artifacts: list[Dict[str, Any]] = Field(default_factory=list)
+    execute_tasks: bool = True
+
+
+class OrchestratorResponse(BaseModel):
+    user_message: str
+    tasks: list[Dict[str, Any]]
+    task_queue: list[Dict[str, Any]]
+    completed_task_ids: list[str]
+    results: list[Dict[str, Any]]
+    execution_events: list[Dict[str, Any]]
+    trace_events: list[Dict[str, Any]]
+    status: str
+    final_state: Dict[str, Any]
 
 
 @app.get("/mcp_healthcheck")
@@ -61,17 +86,34 @@ async def mcp_healthcheck() -> Dict[str, Any]:
         }
 
 
-@app.post("/run-video-gen-orchestrator",response_model=VidOrchResponse)
-async def run_video_gen_orchestrator():
-    #Take the user's message and send it to orchestrator
+@app.post("/run_orchestrator", response_model=OrchestratorResponse)
+async def run_orchestrator(request: OrchestratorRequest) -> OrchestratorResponse:
+    """Run the LangGraph workflow for a supplied video-production request."""
+    from src.agent.graph import build_graph
 
+    try:
+        artifacts = [validate_artifact_reference(item) for item in request.artifacts]
+        final_state = await build_graph().ainvoke({
+            "user_message": request.user_message,
+            "artifacts": artifacts,
+            "execute_tasks": request.execute_tasks,
+        })
+    except ValueError as exc:
+        raise HTTPException(status_code=422, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=503, detail=f"Orchestrator unavailable: {exc}") from exc
 
-    #Take the result from the orchestrator & then run the agents based on that.
-
-
-    #Take the final results and send to the consolidation agent
-
-    #Send the final response to the user
+    return OrchestratorResponse(
+        user_message=final_state["user_message"],
+        tasks=final_state.get("tasks", []),
+        task_queue=final_state.get("task_queue", []),
+        completed_task_ids=final_state.get("completed_task_ids", []),
+        results=final_state.get("results", []),
+        execution_events=final_state.get("execution_events", []),
+        trace_events=final_state.get("trace_events", []),
+        status=final_state.get("status", "completed"),
+        final_state=final_state,
+    )
 
 
 
@@ -92,17 +134,17 @@ def run_agent(args):
     print(f"Output Folder : {args.output_dir or 'workspace/output'}")
     print("\n[INFO] Initializing LangGraph state machine...")
 
-    from src.agent.graph import compile_graph
+    from src.agent.graph import build_graph
 
-    graph_app = compile_graph()
+    graph_app = build_graph()
     initial_state = {
-        "prompt": args.prompt,
-        "input_dir": args.input_dir,
-        "output_dir": args.output_dir,
+        "user_message": args.prompt,
+        "artifacts": [],
+        "execute_tasks": True,
         "status": "initialized",
     }
 
-    result = graph_app.invoke(initial_state)
+    result = asyncio.run(graph_app.ainvoke(initial_state))
     print("\n[SUCCESS] Agent workflow completed.")
     print(f"Final State: {result}")
 
@@ -124,7 +166,7 @@ def run_tool(args):
     if args.tool_name == "tts":
         print(f"[TOOL] Executing generate_tts(text='{args.text}', model='{args.model}')...")
         res = generate_tts(
-            text=args.text,
+            text=args.text or "Testing TTS synthesis.",
             output_path=args.output,
             model_name=args.model,
             voice=args.voice,
@@ -133,6 +175,16 @@ def run_tool(args):
         print(f"  Status      : {res['status']}")
         print(f"  Output Path : {res['output_path']}")
         print(f"  File Size   : {res['file_size_bytes']} bytes")
+    elif args.tool_name == "info":
+        from src.core.media_info import get_media_info
+        print(f"[TOOL] Executing get_media_info('{args.media_path}')...")
+        info = get_media_info(args.media_path)
+        print(json.dumps(info, indent=2))
+    elif args.tool_name == "qc":
+        from src.core.video_engine import validate_final_video
+        print(f"[TOOL] Executing validate_final_video('{args.media_path}')...")
+        qc = validate_final_video(args.media_path)
+        print(json.dumps(qc, indent=2))
     else:
         print(f"[ERROR] Unknown tool name: {args.tool_name}")
 
@@ -192,13 +244,15 @@ def main():
         "tool", help="Directly invoke individual core media engine tools"
     )
     tool_parser.add_argument(
-        "tool_name", choices=["tts"], help="Name of the core tool to execute"
+        "tool_name", choices=["tts", "info", "qc"], help="Name of the core tool to execute"
     )
     tool_parser.add_argument("--text", type=str, help="Text input for TTS")
+    tool_parser.add_argument("--media-path", type=str, default=None, help="Media path for info or qc")
     tool_parser.add_argument("--output", type=str, help="Output file path")
     tool_parser.add_argument("--model", type=str, default="gtts", help="TTS model name")
     tool_parser.add_argument("--voice", type=str, default="en", help="Voice/language code")
     tool_parser.set_defaults(func=run_tool)
+
 
     args = parser.parse_args()
 

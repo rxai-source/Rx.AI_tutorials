@@ -27,6 +27,14 @@ build/
 dist/
 *.egg-info/
 
+# Logs and runtime test outputs
+*.log
+**/workspace/output/*
+!**/workspace/output/.gitkeep
+**/workspace/temp/*
+!**/workspace/temp/.gitkeep
+**/test-artifacts/
+
 # OS files
 .DS_Store
 Thumbs.db
