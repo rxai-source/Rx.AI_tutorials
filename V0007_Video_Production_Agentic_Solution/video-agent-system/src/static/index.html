@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Video Agent Studio — Production Agentic Video Generation</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: '#eef2ff',
+              100: '#e0e7ff',
+              400: '#818cf8',
+              500: '#6366f1',
+              600: '#4f46e5',
+              700: '#4338ca',
+              900: '#312e81',
+            },
+            surface: {
+              800: '#1e2230',
+              850: '#161925',
+              900: '#0f121d',
+              950: '#090b12',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'system-ui', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Inter', sans-serif;
+    }
+    .glass-panel {
+      background: rgba(22, 25, 37, 0.7);
+      backdrop-filter: blur(12px);
+      -webkit-backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .glass-card {
+      background: rgba(30, 34, 48, 0.5);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    .custom-scroll::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scroll::-webkit-scrollbar-track {
+      background: rgba(15, 18, 29, 0.5);
+    }
+    .custom-scroll::-webkit-scrollbar-thumb {
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 4px;
+    }
+    @keyframes pulse-subtle {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.8; transform: scale(1.02); }
+    }
+    .animate-subtle {
+      animation: pulse-subtle 3s infinite ease-in-out;
+    }
+  </style>
+</head>
+<body class="bg-surface-950 text-slate-100 min-h-screen flex flex-col antialiased selection:bg-brand-500 selection:text-white">
+
+  <!-- Top Navigation Header -->
+  <header class="border-b border-slate-800/80 bg-surface-900/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-brand-600 via-purple-600 to-pink-500 flex items-center justify-center shadow-lg shadow-brand-500/25">
+          <svg class="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+          </svg>
+        </div>
+        <div>
+          <div class="flex items-center space-x-2">
+            <h1 class="text-lg font-bold tracking-tight text-white">Video Agent Studio</h1>
+            <span class="px-2 py-0.5 text-xs font-semibold rounded-full bg-brand-500/20 text-brand-400 border border-brand-500/30">v0.1.0</span>
+          </div>
+          <p class="text-xs text-slate-400">Autonomous Video Production · LangGraph & FastMCP</p>
+        </div>
+      </div>
+
+      <!-- Right status pills -->
+      <div class="flex items-center space-x-3">
+        <!-- MCP Status -->
+        <div id="mcp-status-pill" class="flex items-center space-x-2 px-3 py-1.5 rounded-full bg-slate-800/80 border border-slate-700/60 text-xs text-slate-300">
+          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+          <span class="w-2 h-2 rounded-full bg-emerald-500 -ml-4"></span>
+          <span id="mcp-status-text">Connecting to FastMCP...</span>
+        </div>
+
+        <!-- API Docs link -->
+        <a href="/docs" target="_blank" class="px-3 py-1.5 rounded-lg bg-slate-800/80 hover:bg-slate-700/80 border border-slate-700/60 text-xs font-medium text-slate-300 transition flex items-center space-x-1.5">
+          <span>Swagger Docs</span>
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 grid grid-cols-1 lg:grid-cols-12 gap-6">
+
+    <!-- Left Column: Prompting & Input Control (5 cols) -->
+    <section class="lg:col-span-5 flex flex-col space-y-5">
+
+      <!-- Creation Form Card -->
+      <div class="glass-panel rounded-2xl p-6 shadow-xl relative overflow-hidden">
+        <div class="absolute -right-10 -top-10 w-40 h-40 bg-brand-600/10 rounded-full blur-3xl pointer-events-none"></div>
+
+        <h2 class="text-base font-semibold text-white flex items-center space-x-2 mb-3">
+          <svg class="w-4 h-4 text-brand-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
+          </svg>
+          <span>Production Prompt</span>
+        </h2>
+
+        <!-- Prompt Input -->
+        <div class="space-y-3">
+          <textarea
+            id="prompt-input"
+            rows="4"
+            class="w-full rounded-xl bg-surface-900 border border-slate-700/80 p-3.5 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-brand-500 focus:border-transparent resize-none transition"
+            placeholder="Describe your video in detail. E.g. 'Create a 15-second teaser clip explaining AI Agents with title card, punchy voiceover narration, and burned subtitles.'"
+          >Create a 10-second video explaining AI agents.</textarea>
+
+          <!-- Quick Templates -->
+          <div>
+            <span class="text-xs text-slate-400 font-medium block mb-1.5">Quick Inspiration:</span>
+            <div class="flex flex-wrap gap-1.5">
+              <button onclick="setPrompt(this.innerText)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-900/40 border border-slate-700/60 hover:border-brand-500/40 text-slate-300 transition">
+                10-second AI Agents Explainer
+              </button>
+              <button onclick="setPrompt(this.innerText)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-900/40 border border-slate-700/60 hover:border-brand-500/40 text-slate-300 transition">
+                15-second Product Launch Teaser
+              </button>
+              <button onclick="setPrompt(this.innerText)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800/80 hover:bg-brand-900/40 border border-slate-700/60 hover:border-brand-500/40 text-slate-300 transition">
+                Motivational Quote Video with Narration
+              </button>
+            </div>
+          </div>
+
+          <!-- Execution Mode Toggle -->
+          <div class="pt-2 border-t border-slate-800 flex items-center justify-between">
+            <div>
+              <span class="text-xs font-medium text-slate-200 block">Execute Tool Rendering</span>
+              <span class="text-xs text-slate-500">Uncheck to generate plan graph only</span>
+            </div>
+            <label class="relative inline-flex items-center cursor-pointer">
+              <input type="checkbox" id="execute-tasks-checkbox" class="sr-only peer">
+              <div class="w-11 h-6 bg-slate-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-brand-600"></div>
+            </label>
+          </div>
+
+          <!-- Artifact Upload Zone -->
+          <div class="pt-2">
+            <label class="text-xs font-medium text-slate-300 block mb-1.5">Attach Assets / Scripts (Optional)</label>
+            <div id="drop-zone" class="border-2 border-dashed border-slate-700/80 hover:border-brand-500/60 rounded-xl p-3 text-center transition cursor-pointer bg-surface-900/50">
+              <input type="file" id="file-input" multiple class="hidden" />
+              <svg class="mx-auto h-6 w-6 text-slate-400 mb-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12" />
+              </svg>
+              <p class="text-xs text-slate-400"><span class="text-brand-400 font-medium">Click to upload</span> or drag and drop</p>
+              <p class="text-[10px] text-slate-500 mt-0.5">PNG, JPG, MP3, WAV, MP4, TXT (up to 25MB)</p>
+            </div>
+            <!-- Uploaded files list -->
+            <div id="uploaded-files" class="mt-2 space-y-1 text-xs"></div>
+          </div>
+
+          <!-- Submit Button -->
+          <button
+            id="run-btn"
+            onclick="runOrchestrator()"
+            class="w-full mt-3 py-3 px-4 rounded-xl bg-gradient-to-r from-brand-600 to-purple-600 hover:from-brand-500 hover:to-purple-500 text-white font-semibold shadow-lg shadow-brand-600/30 transition transform active:scale-[0.99] flex items-center justify-center space-x-2"
+          >
+            <svg id="run-spinner" class="w-4 h-4 animate-spin hidden" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+            </svg>
+            <span id="run-btn-text">Run Orchestrator</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Live Execution Telemetry -->
+      <div class="glass-panel rounded-2xl p-5 shadow-xl">
+        <h3 class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3 flex items-center justify-between">
+          <span>Execution Telemetry</span>
+          <span id="telemetry-badge" class="px-2 py-0.5 rounded text-[10px] font-medium bg-slate-800 text-slate-400">Idle</span>
+        </h3>
+        <div id="telemetry-list" class="space-y-2 max-h-48 overflow-y-auto custom-scroll pr-1 text-xs font-mono">
+          <div class="text-slate-500 italic text-center py-4">Ready to trigger workflow.</div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Right Column: Pipeline DAG, Task Queue, Media Preview (7 cols) -->
+    <section class="lg:col-span-7 flex flex-col space-y-5">
+
+      <!-- Pipeline Visualization & Status -->
+      <div class="glass-panel rounded-2xl p-6 shadow-xl">
+        <div class="flex items-center justify-between mb-4">
+          <div>
+            <h2 class="text-base font-semibold text-white">Agent Task Pipeline</h2>
+            <p class="text-xs text-slate-400">Autonomous workflow breakdown & tool execution order</p>
+          </div>
+          <div id="pipeline-status-badge" class="px-2.5 py-1 rounded-full text-xs font-medium bg-slate-800 text-slate-400 border border-slate-700">
+            Awaiting Plan
+          </div>
+        </div>
+
+        <!-- Task List / DAG Cards -->
+        <div id="tasks-container" class="space-y-3">
+          <div class="border border-dashed border-slate-800 rounded-xl p-8 text-center text-slate-500 text-xs">
+            <svg class="mx-auto h-8 w-8 text-slate-600 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
+            </svg>
+            Planned tasks will appear here in chronological order with inputs and outputs.
+          </div>
+        </div>
+      </div>
+
+      <!-- Final Video & Artifact Preview -->
+      <div id="media-preview-panel" class="glass-panel rounded-2xl p-6 shadow-xl hidden">
+        <h3 class="text-base font-semibold text-white mb-3 flex items-center space-x-2">
+          <svg class="w-4 h-4 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.752 11.168l-3.197-2.132A1 1 0 0010 9.87v4.263a1 1 0 001.555.832l3.197-2.132a1 1 0 000-1.664z" />
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+          </svg>
+          <span>Rendered Video Artifact</span>
+        </h3>
+        <div class="rounded-xl overflow-hidden bg-black/80 border border-slate-800">
+          <video id="video-player" controls class="w-full aspect-video hidden">
+            Your browser does not support the video tag.
+          </video>
+          <div id="audio-player-container" class="p-4 hidden">
+            <p class="text-xs text-slate-400 mb-2 font-mono">Audio Narration:</p>
+            <audio id="audio-player" controls class="w-full"></audio>
+          </div>
+        </div>
+        <div id="download-actions" class="mt-4 flex items-center justify-end space-x-3"></div>
+      </div>
+
+      <!-- Raw State Inspector (Collapsible) -->
+      <details class="glass-card rounded-xl text-xs overflow-hidden">
+        <summary class="p-3 font-semibold text-slate-400 hover:text-slate-200 cursor-pointer select-none flex items-center justify-between">
+          <span>Raw JSON State Inspector</span>
+          <svg class="w-4 h-4 transform transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7" />
+          </svg>
+        </summary>
+        <div class="p-4 bg-surface-950/80 border-t border-slate-800">
+          <pre id="raw-json" class="custom-scroll max-h-60 overflow-auto font-mono text-[11px] text-slate-300">// Awaiting orchestrator response...</pre>
+        </div>
+      </details>
+
+    </section>
+  </main>
+
+  <footer class="border-t border-slate-800/60 bg-surface-900/40 py-3 text-center text-xs text-slate-500">
+    Video Agent System · FastMCP Media Engine · LangGraph Stateful Orchestration
+  </footer>
+
+  <script>
+    let attachedArtifacts = [];
+
+    // Check FastMCP health on load
+    async function checkMCPHealth() {
+      try {
+        const res = await fetch('/mcp_healthcheck');
+        const data = await res.json();
+        const pill = document.getElementById('mcp-status-pill');
+        const text = document.getElementById('mcp-status-text');
+
+        if (data.status === 'healthy') {
+          pill.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-full bg-emerald-950/40 border border-emerald-500/40 text-xs text-emerald-300';
+          text.innerHTML = `<strong>FastMCP Online</strong> (${data.tools_count} Tools)`;
+        } else {
+          pill.className = 'flex items-center space-x-2 px-3 py-1.5 rounded-full bg-rose-950/40 border border-rose-500/40 text-xs text-rose-300';
+          text.innerText = 'FastMCP Degraded';
+        }
+      } catch (err) {
+        document.getElementById('mcp-status-text').innerText = 'FastMCP Offline';
+      }
+    }
+
+    function setPrompt(text) {
+      document.getElementById('prompt-input').value = text;
+    }
+
+    // Artifact upload handling
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+
+    dropZone.addEventListener('click', () => fileInput.click());
+    dropZone.addEventListener('dragover', (e) => { e.preventDefault(); dropZone.classList.add('border-brand-500'); });
+    dropZone.addEventListener('dragleave', () => dropZone.classList.remove('border-brand-500'));
+    dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      dropZone.classList.remove('border-brand-500');
+      handleFiles(e.dataTransfer.files);
+    });
+    fileInput.addEventListener('change', (e) => handleFiles(e.target.files));
+
+    async function handleFiles(files) {
+      for (const file of files) {
+        const formData = new FormData();
+        formData.append('file', file);
+        try {
+          const res = await fetch('/upload_artifact', {
+            method: 'POST',
+            body: formData
+          });
+          if (!res.ok) throw new Error(await res.text());
+          const artifact = await res.json();
+          attachedArtifacts.push(artifact);
+          renderArtifacts();
+        } catch (err) {
+          alert('Upload failed: ' + err.message);
+        }
+      }
+    }
+
+    function renderArtifacts() {
+      const container = document.getElementById('uploaded-files');
+      container.innerHTML = attachedArtifacts.map((a, i) => `
+        <div class="flex items-center justify-between p-1.5 px-2.5 rounded bg-slate-800/80 border border-slate-700 text-slate-300">
+          <span class="truncate max-w-[200px]">${a.filename}</span>
+          <button onclick="removeArtifact(${i})" class="text-rose-400 hover:text-rose-300 font-bold ml-2">&times;</button>
+        </div>
+      `).join('');
+    }
+
+    function removeArtifact(index) {
+      attachedArtifacts.splice(index, 1);
+      renderArtifacts();
+    }
+
+    // Main Orchestrator Run
+    async function runOrchestrator() {
+      const prompt = document.getElementById('prompt-input').value.trim();
+      const executeTasks = document.getElementById('execute-tasks-checkbox').checked;
+
+      if (!prompt) {
+        alert('Please enter a video instruction prompt.');
+        return;
+      }
+
+      // UI loading state
+      const runBtn = document.getElementById('run-btn');
+      const btnText = document.getElementById('run-btn-text');
+      const spinner = document.getElementById('run-spinner');
+      runBtn.disabled = true;
+      runBtn.classList.add('opacity-75', 'cursor-not-allowed');
+      spinner.classList.remove('hidden');
+      btnText.innerText = executeTasks ? 'Executing Production Pipeline...' : 'Planning Workflow...';
+
+      const telemetryList = document.getElementById('telemetry-list');
+      telemetryList.innerHTML = `<div class="text-indigo-400 font-mono text-[11px]">[${new Date().toLocaleTimeString()}] Dispatching orchestrator request...</div>`;
+      document.getElementById('telemetry-badge').innerText = 'Running';
+      document.getElementById('telemetry-badge').className = 'px-2 py-0.5 rounded text-[10px] font-medium bg-brand-900/60 text-brand-300 border border-brand-500/30';
+
+      try {
+        const res = await fetch('/run_orchestrator', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            user_message: prompt,
+            artifacts: attachedArtifacts,
+            execute_tasks: executeTasks
+          })
+        });
+
+        if (!res.ok) {
+          const errData = await res.json().catch(() => ({ detail: res.statusText }));
+          throw new Error(errData.detail || 'Orchestration failed');
+        }
+
+        const data = await res.json();
+        renderResults(data);
+      } catch (err) {
+        alert('Error: ' + err.message);
+        telemetryList.innerHTML += `<div class="text-rose-400 font-mono text-[11px]">[${new Date().toLocaleTimeString()}] ERROR: ${err.message}</div>`;
+        document.getElementById('telemetry-badge').innerText = 'Failed';
+        document.getElementById('telemetry-badge').className = 'px-2 py-0.5 rounded text-[10px] font-medium bg-rose-900/60 text-rose-300 border border-rose-500/30';
+      } finally {
+        runBtn.disabled = false;
+        runBtn.classList.remove('opacity-75', 'cursor-not-allowed');
+        spinner.classList.add('hidden');
+        btnText.innerText = 'Run Orchestrator';
+      }
+    }
+
+    function renderResults(data) {
+      // 1. Raw JSON
+      document.getElementById('raw-json').innerText = JSON.stringify(data, null, 2);
+
+      // 2. Telemetry / Traces
+      const telemetryList = document.getElementById('telemetry-list');
+      telemetryList.innerHTML = '';
+      (data.trace_events || []).forEach(evt => {
+        const time = evt.timestamp ? new Date(evt.timestamp * 1000).toLocaleTimeString() : new Date().toLocaleTimeString();
+        let detail = evt.event;
+        if (evt.model) detail += ` · ${evt.provider}:${evt.model}`;
+        if (evt.duration_ms) detail += ` (${(evt.duration_ms/1000).toFixed(1)}s)`;
+        if (evt.task_count) detail += ` (${evt.task_count} tasks)`;
+        if (evt.status) detail += ` [${evt.status}]`;
+
+        telemetryList.innerHTML += `
+          <div class="flex items-center justify-between text-slate-300 text-[11px] py-1 border-b border-slate-800/40">
+            <span class="text-brand-400 font-medium">${evt.event}</span>
+            <span class="text-slate-400">${detail}</span>
+          </div>
+        `;
+      });
+      document.getElementById('telemetry-badge').innerText = data.status.toUpperCase();
+      document.getElementById('telemetry-badge').className = 'px-2 py-0.5 rounded text-[10px] font-medium bg-emerald-900/60 text-emerald-300 border border-emerald-500/30';
+
+      // 3. Pipeline DAG Cards
+      const container = document.getElementById('tasks-container');
+      const badge = document.getElementById('pipeline-status-badge');
+      badge.innerText = data.status.toUpperCase();
+      badge.className = data.status === 'completed' 
+        ? 'px-2.5 py-1 rounded-full text-xs font-semibold bg-emerald-500/20 text-emerald-400 border border-emerald-500/30'
+        : 'px-2.5 py-1 rounded-full text-xs font-semibold bg-brand-500/20 text-brand-400 border border-brand-500/30';
+
+      const tasks = data.tasks || [];
+      if (tasks.length === 0) {
+        container.innerHTML = `<div class="p-4 text-center text-slate-400 text-xs">No tasks produced for this instruction.</div>`;
+        return;
+      }
+
+      container.innerHTML = tasks.map((t, idx) => {
+        const isCompleted = (data.completed_task_ids || []).includes(t.id);
+        const statusClass = isCompleted 
+          ? 'bg-emerald-500/10 border-emerald-500/30 text-emerald-300' 
+          : 'bg-slate-800/40 border-slate-700/60 text-slate-300';
+        const badgeLabel = isCompleted ? 'Completed' : 'Planned';
+
+        return `
+          <div class="glass-card rounded-xl p-4 transition hover:border-slate-600">
+            <div class="flex items-center justify-between mb-2">
+              <div class="flex items-center space-x-2">
+                <span class="w-6 h-6 rounded-full bg-brand-600/30 border border-brand-500/40 text-brand-400 text-xs font-bold flex items-center justify-center">${idx + 1}</span>
+                <span class="font-mono text-xs font-semibold text-white">${t.tool_name}</span>
+              </div>
+              <span class="px-2 py-0.5 rounded text-[11px] font-medium border ${statusClass}">${badgeLabel}</span>
+            </div>
+            <p class="text-xs text-slate-300 mb-2.5">${t.description || ''}</p>
+            <details class="text-[11px] font-mono text-slate-400">
+              <summary class="cursor-pointer hover:text-slate-200">View Arguments</summary>
+              <pre class="mt-2 p-2 rounded bg-surface-950 text-slate-300 overflow-x-auto custom-scroll">${JSON.stringify(t.arguments, null, 2)}</pre>
+            </details>
+          </div>
+        `;
+      }).join('');
+
+      // 4. Media Preview (Check if audio or video were rendered)
+      const previewPanel = document.getElementById('media-preview-panel');
+      const videoPlayer = document.getElementById('video-player');
+      const audioContainer = document.getElementById('audio-player-container');
+      const audioPlayer = document.getElementById('audio-player');
+      const downloadActions = document.getElementById('download-actions');
+
+      let hasMedia = false;
+      downloadActions.innerHTML = '';
+
+      (data.results || []).forEach(res => {
+        const output = res.output_path || '';
+        if (output.endsWith('.mp4') || output.endsWith('.webm')) {
+          hasMedia = true;
+          videoPlayer.src = `/${output}`;
+          videoPlayer.classList.remove('hidden');
+          downloadActions.innerHTML += `
+            <a href="/${output}" download class="px-3 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-xs font-semibold text-white transition flex items-center space-x-1">
+              <span>Download MP4</span>
+            </a>
+          `;
+        } else if (output.endsWith('.mp3') || output.endsWith('.wav')) {
+          hasMedia = true;
+          audioPlayer.src = `/${output}`;
+          audioContainer.classList.remove('hidden');
+        }
+      });
+
+      if (hasMedia) {
+        previewPanel.classList.remove('hidden');
+      } else {
+        previewPanel.classList.add('hidden');
+      }
+    }
+
+    // Initialize
+    checkMCPHealth();
+  </script>
+</body>
+</html>

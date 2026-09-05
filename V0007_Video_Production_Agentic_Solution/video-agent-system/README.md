@@ -134,9 +134,9 @@ The orchestrator utilizes automatic failover across models:
 
 | Purpose | Command (with `.venv` activated) | Command (without activating `.venv`) |
 |---|---|---|
+| **Run Web Studio & REST API** | `python main.py api --port 8000` | `uv run python main.py api --port 8000` |
 | **Run FastMCP Tool Server** | `python main.py mcp` | `uv run python main.py mcp` |
 | **Run MCP Healthcheck CLI** | `python main.py healthcheck` | `uv run python main.py healthcheck` |
-| **Run FastAPI REST Server** | `python main.py api --port 8000` | `uv run python main.py api --port 8000` |
 | **Run Streamlit Dev Console** | `streamlit run streamlit_app.py` | `uv run streamlit run streamlit_app.py` |
 | **Run LangGraph Agent Workflow** | `python main.py agent --prompt "..."` | `uv run python main.py agent --prompt "..."` |
 | **Direct Tool Execution** | `python main.py tool tts --text "Hello"` | `uv run python main.py tool tts --text "Hello"` |
@@ -145,6 +145,31 @@ The orchestrator utilizes automatic failover across models:
 | **Run Full Test Suite** | `pytest -v` | `uv run pytest -v` |
 | **Run Media Pipeline Tests** | `pytest tests/test_mcp_media_pipeline.py -v` | `uv run pytest tests/test_mcp_media_pipeline.py -v` |
 | **Run Live Smoke Test** | `$env:RUN_LIVE_ENDPOINT_TEST="1"; pytest tests/test_endpoint_smoke.py -m integration -v` | `uv run pytest tests/test_endpoint_smoke.py -m integration -v` |
+
+---
+
+## Web Studio Dashboard
+
+Starting the server with `python main.py api --port 8000` automatically serves the modern web studio:
+- **Web UI**: Open `http://127.0.0.1:8000` or `http://127.0.0.1:8000/ui` in your browser.
+- **Interactive Swagger Docs**: Open `http://127.0.0.1:8000/docs`.
+
+---
+
+## Docker & Cloud Deployment
+
+### 1. Run with Docker Locally
+```bash
+# Build the production container
+docker build -t video-agent-studio -f Dockerfile .
+
+# Run with environment keys
+docker run -d -p 8000:8000 --env-file ../.env video-agent-studio
+```
+
+### 2. Deploy to Cloud (Render / Railway / Fly.io)
+- **Render**: Connect repository and select `render.yaml` Blueprint or create a Web Service pointing to `V0007_Video_Production_Agentic_Solution/video-agent-system/Dockerfile`.
+- **Railway / Dokku / PaaS**: Auto-detects the provided `Procfile` and `Dockerfile`.
 
 ---
 

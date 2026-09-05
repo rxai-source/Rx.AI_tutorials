@@ -1,0 +1,17 @@
+.git
+.gitignore
+.venv
+venv
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache
+test-artifacts
+workspace/output/*
+!workspace/output/.gitkeep
+workspace/temp/*
+!workspace/temp/.gitkeep
+.env
+.env.*
+*.log

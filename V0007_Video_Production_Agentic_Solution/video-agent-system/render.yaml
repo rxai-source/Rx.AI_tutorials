@@ -1,0 +1,19 @@
+services:
+  - type: web
+    name: video-agent-studio
+    env: docker
+    dockerfilePath: ./V0007_Video_Production_Agentic_Solution/video-agent-system/Dockerfile
+    dockerContext: ./V0007_Video_Production_Agentic_Solution/video-agent-system
+    plan: standard
+    healthCheckPath: /mcp_healthcheck
+    envVars:
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: OPENROUTER_API_KEY
+        sync: false
+      - key: GROQ_API_KEY
+        sync: false
+      - key: DEFAULT_TTS_MODEL
+        value: gtts
+      - key: DEFAULT_TTS_VOICE
+        value: en

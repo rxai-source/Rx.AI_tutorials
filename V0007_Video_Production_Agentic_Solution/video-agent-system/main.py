@@ -6,15 +6,18 @@ import time
 from pathlib import Path
 from typing import Any, Dict
 
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, UploadFile, File
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 import uvicorn
 
 # Add project root directory to sys.path
 sys.path.insert(0, str(Path(__file__).resolve().parent))
 
+from src.config import BASE_DIR, WORKSPACE_DIR
 from src.core.audio_engine import generate_tts
-from src.core.artifacts import validate_artifact_reference
+from src.core.artifacts import validate_artifact_reference, save_artifact
 from src.mcp_server.server import mcp
 
 # Initialize FastAPI application
@@ -23,6 +26,37 @@ app = FastAPI(
     description="REST API for Agent workflow orchestration and FastMCP tool health monitoring.",
     version="0.1.0",
 )
+
+STATIC_DIR = BASE_DIR / "src" / "static"
+if STATIC_DIR.is_dir():
+    app.mount("/static", StaticFiles(directory=str(STATIC_DIR)), name="static")
+
+if WORKSPACE_DIR.is_dir():
+    app.mount("/workspace", StaticFiles(directory=str(WORKSPACE_DIR)), name="workspace")
+
+
+@app.get("/", include_in_schema=False)
+@app.get("/ui", include_in_schema=False)
+async def serve_ui():
+    """Serve the modern web dashboard interface."""
+    index_path = STATIC_DIR / "index.html"
+    if index_path.is_file():
+        return FileResponse(str(index_path))
+    return {"message": "Video Agent System API is running. Visit /docs for Swagger UI."}
+
+
+@app.post("/upload_artifact")
+async def upload_artifact(file: UploadFile = File(...)) -> Dict[str, Any]:
+    """Upload and stage an asset (script, image, audio, video) in the workspace."""
+    try:
+        content = await file.read()
+        saved = save_artifact(file.filename, content, file.content_type)
+        return saved
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Upload failed: {e}")
+
 
 
 class OrchestratorRequest(BaseModel):
