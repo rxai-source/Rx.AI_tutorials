@@ -35,6 +35,10 @@ dist/
 !**/workspace/temp/.gitkeep
 **/test-artifacts/
 
-# OS files
+# OS and Office lock files
 .DS_Store
 Thumbs.db
+~$*
+
+# Ignored untracked projects on dev branch
+V0008_Compare_Alignments_Strengths_Weaknesses_of_Chatbots/
