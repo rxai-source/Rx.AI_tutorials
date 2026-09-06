@@ -126,7 +126,7 @@ DEFAULT_TTS_VOICE=en
 ```
 
 The orchestrator utilizes automatic failover across models:
-**Gemini 3.7 Flash → Gemini 3.6 Flash → OpenRouter Free → Groq GPT-OSS**.
+**Gemini 3.8 Flash → Gemini 3.7 Flash → Gemini 3.6 Flash → OpenRouter Free → Groq GPT-OSS**.
 
 ---
 

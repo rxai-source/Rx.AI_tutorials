@@ -20,8 +20,9 @@ def test_orchestrator_routes_through_every_fallback_before_groq_success():
     )
     failover_client._generate = AsyncMock(
         side_effect=[
-            RuntimeError("429 rate limit"),
-            RuntimeError("Gemini unavailable"),
+            RuntimeError("Gemini 3.8 429 rate limit"),
+            RuntimeError("Gemini 3.7 rate limit"),
+            RuntimeError("Gemini 3.6 unavailable"),
             RuntimeError("OpenRouter unavailable"),
             groq_plan,
         ]

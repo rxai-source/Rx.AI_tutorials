@@ -16,6 +16,7 @@ class LLMTarget:
 
 
 DEFAULT_FAILOVER_ORDER = (
+    LLMTarget("gemini", "gemini-3.8-flash"),
     LLMTarget("gemini", "gemini-3.7-flash"),
     LLMTarget("gemini", "gemini-3.6-flash"),
     LLMTarget("openrouter", "openrouter/free"),

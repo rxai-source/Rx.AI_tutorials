@@ -22,7 +22,7 @@ def _run(coro):
 
 
 @pytest.mark.connectivity
-@pytest.mark.parametrize("model", ["gemini-3.7-flash", "gemini-3.6-flash"])
+@pytest.mark.parametrize("model", ["gemini-3.8-flash", "gemini-3.7-flash", "gemini-3.6-flash"])
 def test_gemini_model_connectivity(model: str):
     """Probe each Gemini tier independently, rather than using failover."""
     if not os.getenv("GEMINI_API_KEY"):

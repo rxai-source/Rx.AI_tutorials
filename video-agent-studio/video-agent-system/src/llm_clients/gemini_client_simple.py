@@ -10,7 +10,7 @@ load_dotenv()
 GEMINI_API_KEY = os.getenv("GEMINI_API_KEY", "")
 
 class GeminiClient:
-    def __init__(self, model_id: str = "gemini-3.7-flash", api_key: Optional[str] = None):
+    def __init__(self, model_id: str = "gemini-3.8-flash", api_key: Optional[str] = None):
         self.api_key = api_key or GEMINI_API_KEY
         if not self.api_key:
             raise ValueError("GEMINI_API_KEY not found.")

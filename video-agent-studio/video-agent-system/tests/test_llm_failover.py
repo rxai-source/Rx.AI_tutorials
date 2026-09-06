@@ -34,6 +34,7 @@ def test_failover_reports_all_provider_errors():
 
 def test_default_order_uses_openrouter_free_then_groq():
     assert [(target.provider, target.model) for target in DEFAULT_FAILOVER_ORDER] == [
+        ("gemini", "gemini-3.8-flash"),
         ("gemini", "gemini-3.7-flash"),
         ("gemini", "gemini-3.6-flash"),
         ("openrouter", "openrouter/free"),
